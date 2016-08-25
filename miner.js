@@ -9,6 +9,7 @@ const _ = require('lodash');
 const _async = require('async');
 const jsome = require('jsome');
 const eventHandler = require('./event-handler');
+const config = require('./config.json');
 
 exports.opts = {
 	start: 				['s', 'start the capture'],
@@ -44,18 +45,21 @@ exports.load = (args, opts, cb) => {
 		cli.getUsage();
 	}
 
+	function skip(parsedData) {
+		return true;	
+	}
 
 	function consume(data) {
 		let parser = /(\d+)\s(\S+)\s(\d+)\s(\S+)\s\((\d+)\)\s([<|>])\s(\S+)\s(.+)/;
 		let parsedData = model(parser.exec(data));
-		if(parsedData){
+		if(parsedData && skip(parsedData)){
+			parsedData.processed = false;
 			if(opts.fd) {
-				
 				let fdParser = /fd=(\d+)\(<([^>]+)>(?:([^) ]*):(.*)->([^) ]*):(.*)|(\/(?:[^)]+)))?\)/;
 				let parsedRawData = fdModel(fdParser.exec(parsedData.eventRawData));
 				if(parsedRawData) {
 					parsedData.data = parsedRawData;
-					jsome(parsedData);
+					parsedData.processed = true;
 				}
 			}
 			if(opts.proc && (parsedData.eventType==='execve' || parsedData.eventType==='clone')) { 
@@ -63,11 +67,14 @@ exports.load = (args, opts, cb) => {
 				let parsedRawData = procModel(procParser.exec(parsedData.eventRawData));
 				if (parsedRawData) {
 					parsedData.relation = parsedRawData;
-					jsome(parsedData);
+					parsedData.processed = true;
 				}
 			}
-			delete parsedData.eventRawData;
-			event(parsedData);
+			if(parsedData.processed) {
+				delete parsedData.eventRawData;
+				jsome(parsedData);
+				event(parsedData);
+			}
 		}
 	}
 
