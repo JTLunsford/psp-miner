@@ -12,6 +12,7 @@
   "dependencies": {
     "async": "^2.0.1",
     "cli": "^1.0.0",
+    "jsome": "^2.3.25",
     "lodash": "^4.15.0"
   }
 }
