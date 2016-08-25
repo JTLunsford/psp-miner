@@ -9,8 +9,9 @@ const _async = require('async');
 const jsome = require('jsome');
 
 exports.opts = {
-	start: 	['s','start the capture'],
-	fd:	['f','capture file descriptors']
+	start: 	['s', 'start the capture'],
+	fd:	['f', 'capture file descriptors'],
+	proc:   ['p', 'capture the child/parent relationships/']
 };
 
 exports.load = (args, opts, cb) => {
@@ -42,6 +43,9 @@ exports.load = (args, opts, cb) => {
 					parsedData.data = parsedRawData;
 					jsome(parsedData);
 				}
+			}
+			if(opts.proc && (parsedData.eventType==='execve' || parsedData.eventType==='clone')) {
+				jsome(parsedData);
 			}
 		}
 	}
