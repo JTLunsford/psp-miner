@@ -11,10 +11,12 @@ const jsome = require('jsome');
 const eventHandler = require('./event-handler');
 
 exports.opts = {
-	start: 		['s', 'start the capture'],
-	fd:		['f', 'capture file descriptors'],
-	proc:   	['p', 'capture the child/parent relationships'],
-	testchild:	['t', 'add a test child/parent']
+	start: 				['s', 'start the capture'],
+	fd:					['f', 'capture file descriptors'],
+	proc:   			['p', 'capture the child/parent relationships'],
+	"no-sysdig":		['n', 'do not spawn sysdig process'],
+	"test-child":		['c', 'add a test child/parent'],
+	"test-events":		['e', 'add a test child/parent']
 };
 
 
