@@ -1,6 +1,8 @@
+---
+applications:
 - name: psp-miner
-  memory: 1G
+  memory: 1024M
   instances: 1
   random-route: true
   timeout: 480
-  buildpack: nodejs_buildpack-1_5_14
+  buildpack: https://github.com/cloudfoundry/nodejs-buildpack/releases/download/v1.5.18/nodejs_buildpack-cached-v1.5.18.zip

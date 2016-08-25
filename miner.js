@@ -25,22 +25,24 @@ exports.opts = {
 let event;
 exports.load = (args, opts, cb) => {
 	if(opts.start){
-		event = eventHandler(opts.url);	
-		
+		event = eventHandler(opts.url);
+
 		if(opts["test-child"]) {
 			setTimeout(() => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
 		}
 
-		let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
-		sysdig.stdout.setEncoding('utf8');
-		sysdig.stdout.on('data', (data) => {
-			for(let line of data.split('\n')){
-				consume(line);
-			}
-		});
-		
+		if (!opts["no-sysdig"]) {
+			let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
+			sysdig.stdout.setEncoding('utf8');
+			sysdig.stdout.on('data', (data) => {
+				for(let line of data.split('\n')){
+					consume(line);
+				}
+			});
+		}
+
 		if (opts["test-events"]) {
 			setInterval(() => {
 				cli.debug('sending event');
@@ -79,7 +81,7 @@ exports.load = (args, opts, cb) => {
 				skipOpen = true;
 		}
 
-		return skipProc || skipEvent || skipOpen;	
+		return skipProc || skipEvent || skipOpen;
 	}
 
 	function consume(data) {
@@ -95,7 +97,7 @@ exports.load = (args, opts, cb) => {
 					parsedData.processed = true;
 				}
 			}
-			if(opts.proc && (parsedData.eventType==='execve' || parsedData.eventType==='clone')) { 
+			if(opts.proc && (parsedData.eventType==='execve' || parsedData.eventType==='clone')) {
 				let procParser = /tid=(\d*)\(([^)]*)\) pid=(\d*)\(([^)]*)\) ptid=(\d*)\(([^)]*)\)/;
 				let parsedRawData = procModel(procParser.exec(parsedData.eventRawData));
 				if (parsedRawData) {
@@ -111,7 +113,7 @@ exports.load = (args, opts, cb) => {
 		}
 	}
 
-	function model(parsed) {	
+	function model(parsed) {
 		return parsed ? {
 			eventId:parseInt(parsed[1]),
 			time:parsed[2],
@@ -142,7 +144,7 @@ exports.load = (args, opts, cb) => {
 					fdType:parsed[2],
 					path:parsed[7]
 				}
-			}	
+			}
 		}
 		else {
 			return void 0;
