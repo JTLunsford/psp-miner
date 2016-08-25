@@ -67,13 +67,25 @@ exports.load = (args, opts, cb) => {
 	}
 
 	function skip(parsedData) {
-		return true;	
+		let skipProc, skipEvent, skipOpen;
+		skipProc = skipEvent = skipOpen = false;
+
+		for(let skipConfig of config.skip){
+			if(skipConfig.proc && skipConfig.proc === parsedData.procname)
+				skipProc = true;
+			if(skipConfig.event && skipConfig.event === parsedData.eventType)
+				skipEvent = true;
+			if(skipConfig.open && skipConfig.open === parsedData.open)
+				skipOpen = true;
+		}
+
+		return skipProc || skipEvent || skipOpen;	
 	}
 
 	function consume(data) {
 		let parser = /(\d+)\s(\S+)\s(\d+)\s(\S+)\s\((\d+)\)\s([<|>])\s(\S+)\s(.+)/;
 		let parsedData = model(parser.exec(data));
-		if(parsedData && skip(parsedData)){
+		if(parsedData && !skip(parsedData)){
 			parsedData.processed = false;
 			if(opts.fd) {
 				let fdParser = /fd=(\d+)\(<([^>]+)>(?:([^) ]*):(.*)->([^) ]*):(.*)|(\/(?:[^)]+)))?\)/;

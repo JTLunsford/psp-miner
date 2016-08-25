@@ -1,8 +1,5 @@
 {
-	"skipProc":[
-		"sh",
-		"node",
-		"sysdig",
-		"V8"
+	"skip":[
+		{"proc":"sh"}
 	]
 }
