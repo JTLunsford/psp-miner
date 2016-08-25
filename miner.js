@@ -25,7 +25,9 @@ function consume(data) {
 	let parser = /(\d+)\s(\S+)\s(\d+)\s(\S+)\s\((\d+)\)\s([<|>])\s(\S+)\s(.+)/;
 	let parsedData = model(parser.exec(data));
 	if(parsedData){
-		console.log(parsedData);
+		
+		let fdParser = /fd=(\d+)\(<([^>]+)>(?:([^) ]*):(.*)->([^) ]*):(.*)|(\/(?:[^)]+)))?\)/;
+		console.log(fdParser.exec(parsedData.eventRawData));
 	}
 }
 
