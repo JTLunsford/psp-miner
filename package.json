@@ -3,6 +3,7 @@
   "version": "0.0.13",
   "description": "",
   "main": "index.js",
+  "port": 8080,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
@@ -13,6 +14,7 @@
     "async": "^2.0.1",
     "cli": "^1.0.0",
     "jsome": "^2.3.25",
-    "lodash": "^4.15.0"
+    "lodash": "^4.15.0",
+    "ws": "^1.1.1"
   }
 }

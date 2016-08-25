@@ -12,10 +12,13 @@ const eventHandler = require('./event-handler');
 const config = require('./config.json');
 
 exports.opts = {
-	start: 		['s', 'start the capture'],
-	fd:		['f', 'capture file descriptors'],
-	proc:   	['p', 'capture the child/parent relationships'],
-	testchild:	['t', 'add a test child/parent']
+	start: 				['s', 'start the capture'],
+	fd:					['f', 'capture file descriptors'],
+	proc:   			['p', 'capture the child/parent relationships'],
+	url:				[false, 'remote server url to send events for processing', 'url'],
+	"no-sysdig":		['n', 'do not spawn sysdig process'],
+	"test-child":		['c', 'add a test child/parent'],
+	"test-events":		['e', 'add a test child/parent']
 };
 
 
@@ -24,7 +27,7 @@ exports.load = (args, opts, cb) => {
 	if(opts.start){
 		event = eventHandler(opts.url);	
 		
-		if(opts.testchild) {
+		if(opts["test-child"]) {
 			setTimeout(() => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
@@ -37,6 +40,26 @@ exports.load = (args, opts, cb) => {
 				consume(line);
 			}
 		});
+		
+		if (opts["test-events"]) {
+			setInterval(() => {
+				cli.debug('sending event');
+				event({
+					eventId: 1086,
+					time: "14:03:01.803821802",
+					cpu: 1,
+					procname: "crond",
+					pid: 1568,
+					open: false,
+					eventType: "open",
+					data: {
+						fdId: 6,
+						fdType: "f",
+						path: "/etc/passwd"
+					}
+				});
+			}, 2500);
+		}
 	}
 	else{
 		cli.error('start is missing');
