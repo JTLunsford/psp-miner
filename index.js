@@ -4,11 +4,13 @@ const http = require('http');
 
 const ws = require('ws');
 
-const eventHandler = require('./event-handler');
+const event = require('./event-handler')();
 
+const port = process.argv[2] !== void 0 ? process.argv[2] : require('./package.json').port;
 new ws.Server({
-    server: http.createServer().listen(
-        process.argv[2] !== void 0 ? process.argv[2] : require('./package.json').port
+    server: http.createServer().listen(port, () => {
+            console.log(`server listening on ${port}...`);
+        }
     )
 }).on('connection', (socket) => {
     socket.on('message', (msg) => {
@@ -24,7 +26,7 @@ new ws.Server({
             console.error(`${eDesc}:\n`, e.stack);
         }
         if (obj !== void 0) {
-            eventHandler(obj);
+            event(obj);
         }
     });
     socket.on('error', (e) => {
