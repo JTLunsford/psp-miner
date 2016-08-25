@@ -5,15 +5,16 @@ const ws = require('ws');
 
 let socket;
 module.exports = (url) => {
-    if (url === void 0) {
-        cli.info('processing event locally');
+    const local = url === void 0 || url === null;
+    if (local) {
+        cli.debug('processing events locally');
     }
     else {
-        cli.info(`sending events to ${url}`);
+        cli.debug(`sending events to ${url}`);
         connectSocket(url);
     }
 	return (evt) => {
-		if (url === void 0) {
+		if (local) {
 		    const processor = require('./processor');
 		    if (evt instanceof Array) {
 		        for (const e of evt) {
