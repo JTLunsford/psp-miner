@@ -1,0 +1,6 @@
+- name: psp-miner
+  memory: 1G
+  instances: 1
+  random-route: true
+  timeout: 480
+  buildpack: nodejs_buildpack-1_5_14
