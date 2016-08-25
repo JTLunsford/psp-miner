@@ -65,7 +65,7 @@ exports.load = (args, opts, cb) => {
 				}
 			}
 			delete parsedData.eventRawData;
-
+			event(parsedData);
 		}
 	}
 
