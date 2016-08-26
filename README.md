@@ -1,4 +1,5 @@
 # psp-miner
+```
 curl -s https://s3.amazonaws.com/download.draios.com/stable/install-sysdig | sudo bash
 
 git clone https://github.com/JTLunsford/psp-miner
@@ -25,3 +26,4 @@ Options:
       --debug            Show debug information
   -v, --version          Display the current version
   -h, --help             Display help and usage details
+```
