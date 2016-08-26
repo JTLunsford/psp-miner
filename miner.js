@@ -27,27 +27,31 @@ exports.load = (args, opts, cb) => {
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
 	if(opts.start){
-		event = eventHandler(opts.url);	
-		
+		event = eventHandler(opts.url);
+
 		if(opts["test-child"]) {
 			setTimeout(() => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
 		}
-		
-		cli.debug('starting sysdig');
-		let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
-		sysdig.stdout.setEncoding('utf8');
-		sysdig.stdout.on('data', (data) => {
-			for(let line of data.split('\n')){
-				consume(line);
-			}
-		});
-		sysdig.stderr.setEncoding('utf8');
-		sysdig.stderr.on('data', (err) => {
-			cli.fatal(err);
-		});
-		
+	
+
+		if (!opts["no-sysdig"]) {
+			let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
+			sysdig.stdout.setEncoding('utf8');
+			sysdig.stdout.on('data', (data) => {
+				for(let line of data.split('\n')){
+					consume(line);
+				}
+			});
+				
+			sysdig.stderr.setEncoding('utf8');
+			sysdig.stderr.on('data', (err) => {
+				cli.fatal(err);
+			});
+	
+		}
+
 		if (opts["test-events"]) {
 			setInterval(() => {
 				cli.debug('sending event');
@@ -86,7 +90,7 @@ exports.load = (args, opts, cb) => {
 				skipOpen = true;
 		}
 
-		return skipProc || skipEvent || skipOpen;	
+		return skipProc || skipEvent || skipOpen;
 	}
 
 	function consume(data) {
@@ -102,7 +106,7 @@ exports.load = (args, opts, cb) => {
 					parsedData.processed = true;
 				}
 			}
-			if(opts.proc && (parsedData.eventType==='execve' || parsedData.eventType==='clone')) { 
+			if(opts.proc && (parsedData.eventType==='execve' || parsedData.eventType==='clone')) {
 				let procParser = /tid=(\d*)\(([^)]*)\) pid=(\d*)\(([^)]*)\) ptid=(\d*)\(([^)]*)\)/;
 				let parsedRawData = procModel(procParser.exec(parsedData.eventRawData));
 				if (parsedRawData) {
@@ -119,7 +123,7 @@ exports.load = (args, opts, cb) => {
 		}
 	}
 
-	function model(parsed) {	
+	function model(parsed) {
 		return parsed ? {
 			eventId:parseInt(parsed[1]),
 			time:parsed[2],
@@ -150,7 +154,7 @@ exports.load = (args, opts, cb) => {
 					fdType:parsed[2],
 					path:parsed[7]
 				}
-			}	
+			}
 		}
 		else {
 			return void 0;

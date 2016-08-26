@@ -3,22 +3,15 @@
   "version": "0.0.14",
   "description": "",
   "main": "index.js",
-  "port": 8080,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
   "engines": {
-    "node": "6.3.0",
-    "npm": "3.0.0"
+    "node": "6.3.1",
+    "npm": "3.10.3"
   },
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "async": "^2.0.1",
-    "cli": "^1.0.0",
-    "jsome": "^2.3.25",
-    "lodash": "^4.15.0",
-    "ws": "^1.1.1"
-  }
+  "dependencies": {}
 }

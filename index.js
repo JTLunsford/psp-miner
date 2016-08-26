@@ -6,10 +6,9 @@ const ws = require('ws');
 
 const event = require('./event-handler')();
 
-const port = process.argv[2] !== void 0 ? process.argv[2] : require('./package.json').port;
 new ws.Server({
-    server: http.createServer().listen(port, () => {
-            console.log(`server listening on ${port}...`);
+    server: http.createServer().listen(process.env.PORT, () => {
+            console.log(`server listening on ${process.env.PORT}...`);
         }
     )
 }).on('connection', (socket) => {
