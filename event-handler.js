@@ -3,11 +3,12 @@
 const cli = require('cli');
 const ws = require('ws');
 
-let socket;
+let socket, processor;
 module.exports = (url) => {
     const local = url === void 0 || url === null;
     if (local) {
-        cli.debug('processing events locally');
+	processor = require('./processor');
+	 cli.debug('processing events locally');
     }
     else {
         cli.debug(`sending events to ${url}`);
@@ -15,7 +16,6 @@ module.exports = (url) => {
     }
 	return (evt) => {
 		if (local) {
-		    const processor = require('./processor');
 		    if (evt instanceof Array) {
 		        for (const e of evt) {
 		            processor(e);

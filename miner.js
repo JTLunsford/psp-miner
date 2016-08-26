@@ -12,18 +12,20 @@ const eventHandler = require('./event-handler');
 const config = require('./config.json');
 
 exports.opts = {
-	start: 				['s', 'start the capture'],
-	fd:					['f', 'capture file descriptors'],
-	proc:   			['p', 'capture the child/parent relationships'],
-	url:				[false, 'remote server url to send events for processing', 'url'],
-	"no-sysdig":		['n', 'do not spawn sysdig process'],
-	"test-child":		['c', 'add a test child/parent'],
-	"test-events":		['e', 'add a test child/parent']
+	start: 		['s', 'start the capture'],
+	fd:		['f', 'capture file descriptors'],
+	proc:   	['p', 'capture the child/parent relationships'],
+	url:		[false, 'remote server url to send events for processing', 'url'],
+	"no-sysdig":	['n', 'do not spawn sysdig process'],
+	"test-child":	['c', 'add a test child/parent'],
+	"test-events":	['e', 'add a test child/parent']
 };
 
 
 let event;
 exports.load = (args, opts, cb) => {
+	cli.debug(`arguments: ${args}`);
+	cli.debug(`options: ${JSON.stringify(opts)}`);
 	if(opts.start){
 		event = eventHandler(opts.url);	
 		
@@ -32,13 +34,18 @@ exports.load = (args, opts, cb) => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
 		}
-
+		
+		cli.debug('starting sysdig');
 		let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
 				consume(line);
 			}
+		});
+		sysdig.stderr.setEncoding('utf8');
+		sysdig.stderr.on('data', (err) => {
+			cli.fatal(err);
 		});
 		
 		if (opts["test-events"]) {
@@ -105,7 +112,8 @@ exports.load = (args, opts, cb) => {
 			}
 			if(parsedData.processed) {
 				delete parsedData.eventRawData;
-				jsome(parsedData);
+				cli.debug('sending event');
+				cli.debug(JSON.stringify(parsedData,null,'\t'));
 				event(parsedData);
 			}
 		}

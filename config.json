@@ -1,5 +1,7 @@
 {
 	"skip":[
-		{"proc":"sh"}
+		{"proc":"sh"},
+		{"proc":"irqbalance"},
+		{"proc":"vim"}
 	]
 }
