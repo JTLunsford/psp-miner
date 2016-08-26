@@ -93,18 +93,18 @@ exports.load = (args, opts, cb) => {
 				},
 				() => {
 					cli.debug('starting sysdig');
-					// let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
-					// sysdig.stdout.setEncoding('utf8');
-					// sysdig.stdout.on('data', (data) => {
-					// 	for(let line of data.split('\n')){
-					// 		consume(line);
-					// 	}
-					// });
+					let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
+					sysdig.stdout.setEncoding('utf8');
+					sysdig.stdout.on('data', (data) => {
+						for(let line of data.split('\n')){
+							consume(line);
+						}
+					});
 						
-					// sysdig.stderr.setEncoding('utf8');
-					// sysdig.stderr.on('data', (err) => {
-					// 	cli.fatal(err);
-					// });
+					sysdig.stderr.setEncoding('utf8');
+					sysdig.stderr.on('data', (err) => {
+						cli.fatal(err);
+					});
 				}
 			], (e) => {
 				if (e !== null) {
