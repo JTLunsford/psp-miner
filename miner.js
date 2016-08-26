@@ -9,6 +9,7 @@ const _ = require('lodash');
 const _async = require('async');
 const jsome = require('jsome');
 const ping = require('ping');
+const ps = require('ps-node');
 
 const eventHandler = require('./event-handler');
 const config = require('./config.json');
@@ -60,19 +61,56 @@ exports.load = (args, opts, cb) => {
 	
 
 		if (!opts["no-sysdig"]) {
-			let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
-			sysdig.stdout.setEncoding('utf8');
-			sysdig.stdout.on('data', (data) => {
-				for(let line of data.split('\n')){
-					consume(line);
+			_async.waterfall([
+				(cb) => {
+					cli.debug('looking-up sysdig processes');
+					ps.lookup({
+						command: 'sysdig'
+					}, (e, sysdigProcs) => {
+						if (e === null) {
+							cb(null, sysdigProcs);
+						}
+						else {
+							cb(`ERROR LOOKING-UP SYSDIG PROCESSES:\n${e.stack}`);
+						}
+					});
+				},
+				(sysdigProcs, cb) => {
+					cli.debug(`found ${sysdigProcs.length} sysdig pid(s) running`);
+					_async.each(sysdigProcs, (sysdigProc, cb) => {
+						cli.debug(`killing sysdig pid: ${sysdigProc.pid}`);
+						ps.kill(sysdigProc.pid, (e) => {
+							cb(e);
+						});
+					}, (e) => {
+						if (e === null) {
+							cb(null);
+						}
+						else {
+							cb(`ERROR KILLING SYSDIG PROCESSES:\n${e.stack}`);
+						}
+					});
+				},
+				() => {
+					cli.debug('starting sysdig');
+					let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
+					sysdig.stdout.setEncoding('utf8');
+					sysdig.stdout.on('data', (data) => {
+						for(let line of data.split('\n')){
+							consume(line);
+						}
+					});
+						
+					sysdig.stderr.setEncoding('utf8');
+					sysdig.stderr.on('data', (err) => {
+						cli.fatal(err);
+					});
+				}
+			], (e) => {
+				if (e !== null) {
+					cli.error(e);
 				}
 			});
-				
-			sysdig.stderr.setEncoding('utf8');
-			sysdig.stderr.on('data', (err) => {
-				cli.fatal(err);
-			});
-	
 		}
 
 		if (opts["test-events"]) {
