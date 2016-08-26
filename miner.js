@@ -8,17 +8,21 @@ const cli = require('cli');
 const _ = require('lodash');
 const _async = require('async');
 const jsome = require('jsome');
+const ping = require('ping');
+
 const eventHandler = require('./event-handler');
 const config = require('./config.json');
 
 exports.opts = {
-	start: 		['s', 'start the capture'],
-	fd:		['f', 'capture file descriptors'],
-	proc:   	['p', 'capture the child/parent relationships'],
-	url:		[false, 'remote server url to send events for processing', 'url'],
-	"no-sysdig":	['n', 'do not spawn sysdig process'],
-	"test-child":	['c', 'add a test child/parent'],
-	"test-events":	['e', 'add a test child/parent']
+	start: 				['s', 'start the capture'],
+	fd:					['f', 'capture file descriptors'],
+	proc:   			['p', 'capture the child/parent relationships'],
+	url:				[false, 'remote server url to send events for processing', 'url'],
+	"run-for":			[false, 'run application for a certain number of seconds', 'int'],
+	"no-sysdig":		['n', 'do not spawn sysdig process'],
+	"test-child":		['c', 'add a test child/parent'],
+	"test-events":		['e', 'add a test child/parent'],
+	"test-internet":	['i', 'test internet connection']
 };
 
 
@@ -27,6 +31,25 @@ exports.load = (args, opts, cb) => {
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
 	if(opts.start){
+		
+		if (opts["run-for"] !== null) {
+			setTimeout(() => {
+				process.exit(0);
+			}, opts["run-for"] * 1000);
+		}
+		
+		if (opts["test-internet"]) {
+			ping.sys.probe('8.8.8.8', (isAlive) => {
+				let msg = 'internet connection available';
+				if (isAlive) {
+					cli.info(msg);
+				}
+				else {
+					cli.warn(`no ${msg}`);
+				}
+			});
+		}
+		
 		event = eventHandler(opts.url);
 
 		if(opts["test-child"]) {

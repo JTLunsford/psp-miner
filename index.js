@@ -7,7 +7,8 @@ const ws = require('ws');
 const event = require('./event-handler')();
 
 new ws.Server({
-    server: http.createServer().listen(process.env.PORT, () => {
+    server: http.createServer().listen(process.env.PORT, 
+        () => {
             console.log(`server listening on ${process.env.PORT}...`);
         }
     )
