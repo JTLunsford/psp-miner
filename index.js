@@ -1,13 +1,30 @@
 "use strict";
 
 const http = require('http');
+const fs = require('fs');
 
 const ws = require('ws');
 
 const event = require('./event-handler')();
 
 new ws.Server({
-    server: http.createServer().listen(process.env.PORT, 
+    server: http.createServer((req, res) => {
+        let data = '';
+        if (req.url === '/api/data') {
+            if (req.method === 'GET') {
+                res.setHeader('Content-Type', 'application/json');
+                data = fs.readFileSync('./db.json', 'utf8');
+            }
+            else {
+                res.setHeader('Allow', 'GET');
+                res.statusCode = 405;
+            }
+        }
+        else {
+            res.statusCode = 404;
+        }
+        res.end(data);
+    }).listen(process.env.PORT, 
         () => {
             console.log(`server listening on ${process.env.PORT}...`);
         }
