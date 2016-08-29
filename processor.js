@@ -117,7 +117,7 @@ function handle(evt) {
 				upsertProcess(evt.procname);
 			}
 
-			if(!evt.data) {
+			if(evt.data) {
 				if(evt.eventType==='sendto') {
 				
 					switch(evt.data.fdType) {
