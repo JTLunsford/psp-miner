@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+
+const cli = require('cli');
+
+const config = require('./config.json');
+
+const server = require('./server');
+
+cli.enable('version').enable('status');
+
+cli.parse(server.opts);
+
+cli.main((args, opts) => {
+	server.load(args, opts);
+});

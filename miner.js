@@ -20,6 +20,7 @@ exports.opts = {
 	proc:   			['p', 'capture the child/parent relationships'],
 	url:				[false, 'remote server url to send events for processing', 'url'],
 	"run-for":			[false, 'run application for a certain number of seconds', 'int'],
+    "db-write-freq":    [false, 'frequency, in seconds, to write db.json', 'int', 30],
 	"no-sysdig":		['n', 'do not spawn sysdig process'],
 	"test-child":		['c', 'add a test child/parent'],
 	"test-events":		['e', 'add a test child/parent'],
@@ -51,7 +52,7 @@ exports.load = (args, opts, cb) => {
 			});
 		}
 		
-		event = eventHandler(opts.url);
+		event = eventHandler(opts['db-write-freq'], opts.url);
 
 		if(opts["test-child"]) {
 			setTimeout(() => {
