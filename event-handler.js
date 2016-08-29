@@ -7,14 +7,14 @@ let socket, processor;
 module.exports = (url) => {
     const local = url === void 0 || url === null;
     if (local) {
-	processor = require('./processor');
-	 cli.debug('processing events locally');
+		processor = require('./processor');
+		cli.debug('processing events locally');
     }
     else {
         cli.debug(`sending events to ${url}`);
         connectSocket(url);
     }
-	return (evt) => {
+    function handle(evt) {
 		if (local) {
 		    if (evt instanceof Array) {
 		        for (const e of evt) {
@@ -36,7 +36,9 @@ module.exports = (url) => {
 		    }
 		    socket.send(JSON.stringify(evt));
 		}
-	};
+	}
+	handle.processor = processor;
+	return handle;
 };
 
 function connectSocket(url) {
