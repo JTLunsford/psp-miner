@@ -2,7 +2,6 @@
   "name": "psp-miner",
   "version": "0.0.17",
   "description": "",
-  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "./run-server"
@@ -18,7 +17,6 @@
     "cli": "^1.0.0",
     "jsome": "^2.3.25",
     "lodash": "^4.15.0",
-    "ping": "^0.2.0",
     "ps-node": "^0.1.2",
     "ws": "^1.1.1"
   }
