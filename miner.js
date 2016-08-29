@@ -228,7 +228,7 @@ exports.load = (args, opts, cb) => {
 				pid: parsed[3],
 				pProcName: parsed[4],
 				ptid: parsed[5],
-				ptProceName: parsed[6]
+				ptProcName: parsed[6]
 			}
 		}
 	}

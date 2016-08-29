@@ -32,6 +32,7 @@ function upsertProcess(procname, parent) {
 		if(parent !== void 0) {
 			upsertProcess(parent);
 			db.processes[parent].children.push(procname);
+			db.processes[parent].children = _.uniq(db.processes[parent].children);
 		}
 	}
 }
@@ -109,13 +110,14 @@ function handle(evt) {
 		cli.debug(`processor received event: ${JSON.stringify(evt,null,'\t')}`); 
 		if(dbLoaded) {
 			if(evt.relation) {
+				//console.log(evt.relation,evt.procname,evt.relation.ptProcName);
 				upsertProcess(evt.procname,evt.relation.ptProcName);		
 			}
 			else {
 				upsertProcess(evt.procname);
 			}
 
-			if(evt.data) {
+			if(!evt.data) {
 				if(evt.eventType==='sendto') {
 				
 					switch(evt.data.fdType) {
