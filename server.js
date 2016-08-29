@@ -37,7 +37,7 @@ exports.load = (args, opts, cb) => {
                         });
                     }
                     else {
-                        res.setHeader('Allow', 'GET');
+                        res.setHeader('Allow', 'DELETE');
                         res.statusCode = 405;
                         res.end();
                     }
