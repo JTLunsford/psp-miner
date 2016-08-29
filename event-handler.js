@@ -4,10 +4,12 @@ const cli = require('cli');
 const ws = require('ws');
 
 let socket, processor;
-module.exports = (url) => {
+module.exports = (dbWriteFreqInSeconds, url) => {
     const local = url === void 0 || url === null;
     if (local) {
 		processor = require('./processor');
+		cli.debug(`writing db every ${dbWriteFreqInSeconds} seconds`);
+		processor.initializeProcessor(dbWriteFreqInSeconds);
 		cli.debug('processing events locally');
     }
     else {
