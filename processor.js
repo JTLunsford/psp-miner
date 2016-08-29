@@ -44,19 +44,8 @@ fs.stat(dbFilePath,(err) => {
 				cli.debug('db written to disk');
 			}
 		});
-	},60000);
+	},30000);
 });
-
-function create(evt) {
-	db.processes[evt.procname] = {
-		procname: evt.procname,
-		events: 1
-	};
-}
-
-function update(evt) {
-	db.processes[evt.procname].events++;
-}
 
 function upsertProcess(procname, parent) {
 	cli.debug('upserting');
@@ -74,7 +63,7 @@ function upsertProcess(procname, parent) {
 		else {
 			db.processes[procname].events++;
 		}
-		if(parent) {
+		if(parent !== void 0) {
 			upsertProcess(parent);
 			db.processes[parent].children.push(procname);
 		}
