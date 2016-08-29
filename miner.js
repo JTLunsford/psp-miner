@@ -41,15 +41,12 @@ exports.load = (args, opts, cb) => {
 		}
 		
 		if (opts["test-internet"]) {
-			ping.sys.probe('8.8.8.8', (isAlive) => {
-				let msg = 'internet connection available';
-				if (isAlive) {
-					cli.info(msg);
-				}
-				else {
-					cli.warn(`no ${msg}`);
-				}
-			});
+			cli.debug('running test-internet');
+			setInterval(() => {
+				exec('./test-internet',(err) => {
+					cli.debug('test-internet done');
+				});
+			}, 2500);
 		}
 		
 		event = eventHandler(opts['db-write-freq'], opts.url);

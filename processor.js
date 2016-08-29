@@ -37,21 +37,22 @@ function upsertProcess(procname, parent) {
 }
 
 function upsertConnection(procname, ip) {
-
-	if(db.connections[ip] === void 0) {
-		db.connections[ip] = {
-			ip: ip,
-			procs: [procname],
-			events: 1
-		};					
+	if(!_.some(config.ipSkip,(n)=>{return n===ip;})) {
+		if(db.connections[ip] === void 0) {
+			db.connections[ip] = {
+				ip: ip,
+				procs: [procname],
+				events: 1
+			};					
+		}
+		else {
+			db.connections[ip].events++;
+			db.connections[ip].procs.push(procname);
+			db.connections[ip].procs = _.uniq(db.connections[ip].procs);
+		}
+		db.processes[procname].connections.push(ip);
+		db.processes[procname].connections = _.uniq(db.processes[procname].connections);
 	}
-	else {
-		db.connections[ip].events++;
-		db.connections[ip].procs.push(procname);
-		db.connections[ip].procs = _.uniq(db.connections[ip].procs);
-	}
-	db.processes[procname].connections.push(ip);
-	db.processes[procname].connections = _.uniq(db.processes[procname].connections);
 }
 
 function initializeDb(cb) {
