@@ -23,6 +23,7 @@ function upsertProcess(procname, parent) {
 				procname: procname,
 				children: [],
 				connections: [],
+				resources: [],
 				events: 1
 			};					
 		}
@@ -68,7 +69,7 @@ function upsertResource(procname, path) {
 		else {
 			db.resources[path].events++;
 			db.resources[path].procs.push(procname);
-			db.resources[path].procs = _.uniq(db.connections[path].procs);
+			db.resources[path].procs = _.uniq(db.resources[path].procs);
 		}
 		db.processes[procname].resources.push(path);
 		db.processes[procname].resources = _.uniq(db.processes[procname].resources);

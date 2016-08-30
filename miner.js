@@ -57,9 +57,6 @@ exports.load = (args, opts, cb) => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
 		}
-		
-		loadConfig(opts, () => {});
-	
 
 		if (!opts["no-sysdig"]) {
 			_async.waterfall([
