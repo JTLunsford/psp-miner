@@ -3,8 +3,9 @@ const cli = require('cli');
 const fs = require('fs');
 const path = require('path');
 const dbFilePath = path.join(__dirname,'db.json');
-const config = require('./config.json');
 const _ = require('lodash');
+
+let config = require('./config.json');
 
 let skipProcNames = _.map(config.skip, 'proc');
 cli.debug('skip proc names: '+JSON.stringify(skipProcNames));
@@ -130,7 +131,6 @@ function handle(evt) {
 		cli.debug(`processor received event: ${JSON.stringify(evt,null,'\t')}`); 
 		if(dbLoaded) {
 			if(evt.relation) {
-				//console.log(evt.relation,evt.procname,evt.relation.ptProcName);
 				upsertProcess(evt.procname,evt.relation.ptProcName);		
 			}
 			else {
@@ -169,6 +169,9 @@ function handle(evt) {
 }
 handle.initializeDb = initializeDb;
 handle.initializeProcessor = initializeProcessor;
+handle.updateConfig = (cfg) => {
+	config = cfg;
+};
 
 module.exports = handle;
 

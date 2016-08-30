@@ -23,8 +23,28 @@ exports.load = (args, opts, cb) => {
                         res.setHeader('Content-Type', 'application/json');
                         res.end(fs.readFileSync('./config.json', 'utf8'));
                     }
+                    else if (req.method === 'PUT') {
+                        let configJson = '';
+                        req.setEncoding('utf8');
+                        req.on('data', (data) => {
+                            configJson += data;
+                        });
+                        req.on('end', () => {
+                            utility.parseJson(configJson, (e, config) => {
+                                if (e === null) {
+                                    event.processor.updateConfig(config);
+                                    fs.writeFileSync('./config.json', JSON.stringify(config, null, '\t'));
+                                }
+                                else {
+                                    cli.error(e);
+                                    res.statusCode = 500;
+                                }
+                                res.end();
+                            });
+                        });
+                    }
                     else {
-                        res.setHeader('Allow', 'GET');
+                        res.setHeader('Allow', 'GET, PUT');
                         res.statusCode = 405;
                         res.end();
                     }

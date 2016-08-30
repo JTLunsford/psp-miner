@@ -1,14 +1,20 @@
 {
-	"skip":[
-		{"proc":"sh"},
-		{"proc":"irqbalance"},
-		{"proc":"vim"}
+	"skip": [
+		{
+			"proc": "sh"
+		},
+		{
+			"proc": "irqbalance"
+		},
+		{
+			"proc": "vim"
+		}
 	],
-	"ipSkip":[
+	"ipSkip": [
 		"169.254.169.254",
 		"10.240.0.8"
 	],
-	"pathSkip":[],
+	"pathSkip": [],
 	"sysdig": {
 		"filters": {
 			"and": [],

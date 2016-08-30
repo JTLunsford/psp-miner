@@ -1,14 +1,11 @@
 "use strict"
 
-const path = require('path');
 const spawn = require('child_process').spawn;
 const exec = require('child_process').exec;
 
 const cli = require('cli');
 const _ = require('lodash');
 const _async = require('async');
-const jsome = require('jsome');
-const ping = require('ping');
 const ps = require('ps-node');
 
 const eventHandler = require('./event-handler');
