@@ -1,6 +1,5 @@
 "use strict"
 
-const spawn = require('child_process').spawn;
 const exec = require('child_process').exec;
 
 const cli = require('cli');
@@ -251,14 +250,13 @@ exports.load = (args, opts, cb) => {
 	
 	function startSysdig() {
 		cli.debug('starting sysdig');
-		let sysdig = spawn('sysdig', buildSysdigArgs());
+		let sysdig = exec(`sysdig ${buildSysdigArgs()}`);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
 				consume(line);
 			}
 		});
-			
 		sysdig.stderr.setEncoding('utf8');
 		sysdig.stderr.on('data', (err) => {
 			cli.fatal(err);
@@ -266,6 +264,41 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function buildSysdigArgs() {
-		return ['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig'];
+		let args = [];
+		if (config.filter.not) {
+			args.push('not');
+		}
+		_.each(config.filter.and, (filter, i) => {
+			if (i === 0 && config.filter.or.length > 0) {
+				filter = `(${filter}`;
+			}
+			args = args.concat(filter.split(' '));
+			if (i < config.filter.and.length - 1) {
+				args.push('and');	
+			}
+			else if (config.filter.or.length > 0) {
+				args[args.length - 1] = `${args[args.length - 1]})`;
+			}
+		});
+		if (config.filter.and.length > 0 && config.filter.or.length > 0) {
+			args.push('or');
+		}
+		_.each(config.filter.or, (filter, i) => {
+			args = args.concat(filter.split(' '));
+			if (i < config.filter.or.length - 1) {
+				args.push('or');	
+			}
+		});
+		if (args[0] === 'not') {
+			args[1] = `(${args[1]}`;
+			args[args.length - 1] = `${args[args.length - 1]})`;
+		}
+		if (args.length > 0) {
+			args[0] = `"${args[0]}`;
+			args[args.length - 1] = `${args[args.length - 1]}"`;
+		}
+		args = args.join(' ');
+		cli.debug(`sysdig filter: ${args}`);
+		return args;
 	}
 };
