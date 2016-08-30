@@ -2,6 +2,9 @@
 
 const cli = require('cli');
 const ws = require('ws');
+const request = require('request');
+
+const utility = require('./utility');
 
 let socket, processor;
 module.exports = (dbWriteFreqInSeconds, url) => {
@@ -40,6 +43,25 @@ module.exports = (dbWriteFreqInSeconds, url) => {
 		}
 	}
 	handle.processor = processor;
+	handle.downloadConfig = (cb) => {
+		const configUrl = `${url}/config.json`;
+		cli.debug(`downloading config from ${configUrl}`)
+		request.get(configUrl).on('response', (res) => {
+		  	if (res.statusCode === 200) {
+		  		let body = "";
+		  		res.setEncoding('utf8');
+		  		res.on('data', (data) => {
+		  			body += data;
+		  		});
+		  		res.on('end', () => {
+	            	utility.parseJson(body, cb);
+		  		});
+		  	}
+		  	else {
+		  		cb(`ERROR DOWNLOADING CONFIG: HTTP GET ${configUrl} -> ${res.statusCode} - ${res.statusMessage}`);
+		  	}
+		  });
+	};
 	return handle;
 };
 

@@ -56,6 +56,25 @@ function upsertConnection(procname, ip) {
 	}
 }
 
+function upsertResource(procname, path) {
+	if(!_.some(config.pathSkip,(n)=>{return n===path;})) { //TODO: n could be a glob
+		if(db.resources[path] === void 0) {
+			db.resources[path] = {
+				path: path,
+				procs: [procname],
+				events: 1
+			};					
+		}
+		else {
+			db.resources[path].events++;
+			db.resources[path].procs.push(procname);
+			db.resources[path].procs = _.uniq(db.connections[path].procs);
+		}
+		db.processes[procname].resources.push(path);
+		db.processes[procname].resources = _.uniq(db.processes[procname].resources);
+	}
+}
+
 function initializeDb(cb) {
 	db = {
 		"connections":{},
@@ -118,7 +137,10 @@ function handle(evt) {
 			}
 
 			if(evt.data) {
-				if(evt.eventType==='sendto') {
+				if (evt.data.fdType === 'f') {
+					upsertResource(evt.procname, evt.data.path);
+				}
+				else if(evt.eventType==='sendto') {
 				
 					switch(evt.data.fdType) {
 						case '4u':
@@ -129,7 +151,7 @@ function handle(evt) {
 							break;
 					}
 				}
-				if(evt.eventType==='recvfrom') {
+				else if(evt.eventType==='recvfrom') {
 				
 					switch(evt.data.fdType) {
 						case '4u':

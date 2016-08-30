@@ -12,7 +12,8 @@ const ping = require('ping');
 const ps = require('ps-node');
 
 const eventHandler = require('./event-handler');
-const config = require('./config.json');
+
+let config;
 
 exports.opts = {
 	start: 				['s', 'start the capture'],
@@ -56,54 +57,22 @@ exports.load = (args, opts, cb) => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
 		}
+		
+		loadConfig(opts, () => {});
 	
 
 		if (!opts["no-sysdig"]) {
 			_async.waterfall([
+				
 				(cb) => {
-					cli.debug('looking-up sysdig processes');
-					ps.lookup({
-						command: 'sysdig'
-					}, (e, sysdigProcs) => {
-						if (e === null) {
-							cb(null, sysdigProcs);
-						}
-						else {
-							cb(`ERROR LOOKING-UP SYSDIG PROCESSES:\n${e.stack}`);
-						}
-					});
+					loadConfig(opts, cb);
 				},
-				(sysdigProcs, cb) => {
-					cli.debug(`found ${sysdigProcs.length} sysdig pid(s) running`);
-					_async.each(sysdigProcs, (sysdigProc, cb) => {
-						cli.debug(`killing sysdig pid: ${sysdigProc.pid}`);
-						ps.kill(sysdigProc.pid, (e) => {
-							cb(e);
-						});
-					}, (e) => {
-						if (e === null) {
-							cb(null);
-						}
-						else {
-							cb(`ERROR KILLING SYSDIG PROCESSES:\n${e.stack}`);
-						}
-					});
-				},
-				() => {
-					cli.debug('starting sysdig');
-					let sysdig = spawn('sysdig',['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig']);
-					sysdig.stdout.setEncoding('utf8');
-					sysdig.stdout.on('data', (data) => {
-						for(let line of data.split('\n')){
-							consume(line);
-						}
-					});
-						
-					sysdig.stderr.setEncoding('utf8');
-					sysdig.stderr.on('data', (err) => {
-						cli.fatal(err);
-					});
-				}
+				
+				lookupSysdigProcs,
+				killSysdigProcs,
+				
+				startSysdig
+				
 			], (e) => {
 				if (e !== null) {
 					cli.error(e);
@@ -231,5 +200,78 @@ exports.load = (args, opts, cb) => {
 				ptProcName: parsed[6]
 			}
 		}
+	}
+	
+	function loadConfig(opts, cb) {
+		if (opts.url) {
+			event.downloadConfig((e, cfg) => {
+				if (e === null) {
+					cli.debug('config downloaded');
+					config = cfg;
+				}
+				else {
+					cli.debug('config loaded locally');
+					config = require('./config.json');
+					cli.error(e);
+				}
+				cli.debug(`config: ${JSON.stringify(config)}`);
+				cb(null);
+			});
+		}
+		else {
+			config = require('./config.json');
+			process.nextTick(() => { cb(null); });
+		}
+	}
+	
+	function lookupSysdigProcs(cb) {
+		cli.debug('looking-up sysdig processes');
+		ps.lookup({
+			command: 'sysdig'
+		}, (e, sysdigProcs) => {
+			if (e === null) {
+				cb(null, sysdigProcs);
+			}
+			else {
+				cb(`ERROR LOOKING-UP SYSDIG PROCESSES:\n${e.stack}`);
+			}
+		});
+	}
+	
+	function killSysdigProcs(sysdigProcs, cb) {
+		cli.debug(`found ${sysdigProcs.length} sysdig pid(s) running`);
+		_async.each(sysdigProcs, (sysdigProc, cb) => {
+			cli.debug(`killing sysdig pid: ${sysdigProc.pid}`);
+			ps.kill(sysdigProc.pid, (e) => {
+				cb(e);
+			});
+		}, (e) => {
+			if (e === null) {
+				cb(null);
+			}
+			else {
+				cb(`ERROR KILLING SYSDIG PROCESSES:\n${e.stack}`);
+			}
+		});
+	}
+	
+	function startSysdig() {
+		cli.debug('starting sysdig');
+		let sysdig = spawn('sysdig', buildSysdigArgs());
+		sysdig.stdout.setEncoding('utf8');
+		sysdig.stdout.on('data', (data) => {
+			for(let line of data.split('\n')){
+				consume(line);
+			}
+		});
+			
+		sysdig.stderr.setEncoding('utf8');
+		sysdig.stderr.on('data', (err) => {
+			cli.fatal(err);
+		});
+	}
+	
+	function buildSysdigArgs() {
+		return ['evt.type!=switch', 'and', 'proc.name!=V8', 'and', 'proc.name!=node', 'and', 'proc.name!=sshd', 'and', 'proc.name!=sysdig'];
 	}
 };
