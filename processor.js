@@ -17,8 +17,7 @@ let db;
 function upsertProcess(procname, parent) {
 	cli.debug('upserting');
 	if(!_.some(skipProcNames,(n)=>{return n===procname;})) {
-		cli.debug('proc name not skipped');
-
+		cli.debug(`proc ${procname} not skipped`);
 		if(db.processes[procname] === void 0) {
 			db.processes[procname] = {
 				procname: procname,
@@ -41,6 +40,7 @@ function upsertProcess(procname, parent) {
 
 function upsertConnection(procname, ip) {
 	if(!_.some(config.ipSkip,(n)=>{return n===ip;})) {
+		cli.debug(`connection ${ip} not skipped`);
 		if(db.connections[ip] === void 0) {
 			db.connections[ip] = {
 				ip: ip,
@@ -60,6 +60,7 @@ function upsertConnection(procname, ip) {
 
 function upsertResource(procname, path) {
 	if(!_.some(config.pathSkip,(n)=>{return n===path;})) { //TODO: n could be a glob
+		cli.debug(`resource ${path} not skipped`);
 		if(db.resources[path] === void 0) {
 			db.resources[path] = {
 				path: path,
