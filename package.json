@@ -14,9 +14,11 @@
   "license": "apache-2.0",
   "dependencies": {
     "async": "^2.0.1",
+    "cidr-js": "^2.3.1",
     "cli": "^1.0.0",
     "jsome": "^2.3.25",
     "lodash": "^4.15.0",
+    "minimatch": "^3.0.3",
     "ps-node": "^0.1.2",
     "request": "^2.74.0",
     "ws": "^1.1.1"
