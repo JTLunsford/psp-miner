@@ -5,6 +5,7 @@ const path = require('path');
 const dbFilePath = path.join(__dirname,'db.json');
 const _ = require('lodash');
 const cidr = require('cidr-js');
+const minimatch = require('minimatch');
 
 let config = require('./config.json');
 
@@ -60,7 +61,7 @@ function upsertConnection(procname, ip) {
 }
 
 function upsertResource(procname, path) {
-	if(!_.some(config.pathSkip,(n)=>{return n===path;})) { //TODO: n could be a glob
+	if(!_.some(config.pathSkip,(n)=>{return minimatch(n, path);})) {
 		cli.debug(`resource ${path} not skipped`);
 		if(db.resources[path] === void 0) {
 			db.resources[path] = {
