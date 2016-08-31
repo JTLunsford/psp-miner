@@ -15,10 +15,9 @@ cli.debug('skip proc names: '+JSON.stringify(skipProcNames));
 let dbLoaded = false;
 
 let db;
-
 function upsertProcess(procname, parent) {
 	cli.debug('upserting');
-	if(!_.some(skipProcNames,(n)=>{return n===procname;})) {
+	if(!_.some(skipProcNames,(n)=>{return n===procname || procname.match(n) !== null;})) {
 		cli.debug(`proc ${procname} not skipped`);
 		if(db.processes[procname] === void 0) {
 			db.processes[procname] = {
