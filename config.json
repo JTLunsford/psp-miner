@@ -15,10 +15,15 @@
 		"10.240.0.8"
 	],
 	"pathSkip": [],
-	"sysdig": {
-		"filters": {
-			"and": [],
-			"or": []
-		}
+	"filter": {
+		"not": false,
+		"and": [
+			"evt.type!=switch",
+			"proc.name!=V8",
+			"proc.name!=node",
+			"proc.name!=sshd",
+			"proc.name!=sysdig"
+		],
+		"or": []
 	}
 }
