@@ -30,7 +30,6 @@ exports.load = (args, opts, cb) => {
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
 	if(opts.start){
-		
 		if (opts["run-for"] !== null) {
 			setTimeout(() => {
 				process.exit(0);

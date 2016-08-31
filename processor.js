@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const dbFilePath = path.join(__dirname,'db.json');
 const _ = require('lodash');
+const cidr = require('cidr-js');
 
 let config = require('./config.json');
 
@@ -39,7 +40,7 @@ function upsertProcess(procname, parent) {
 }
 
 function upsertConnection(procname, ip) {
-	if(!_.some(config.ipSkip,(n)=>{return n===ip;})) {
+	if(!_.some(config.ipSkip,(n)=>{return ip == n || _.some(new cidr().list(n), (anIp) => { return anIp == ip; });})) {
 		cli.debug(`connection ${ip} not skipped`);
 		if(db.connections[ip] === void 0) {
 			db.connections[ip] = {
