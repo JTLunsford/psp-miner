@@ -33,8 +33,10 @@ function upsertProcess(procname, parent) {
 		}
 		if(parent !== void 0) {
 			upsertProcess(parent);
-			db.processes[parent].children.push(procname);
-			db.processes[parent].children = _.uniq(db.processes[parent].children);
+			if(db.processes[parent]){
+				db.processes[parent].children.push(procname);
+				db.processes[parent].children = _.uniq(db.processes[parent].children);
+			}
 		}
 	}
 }
@@ -74,8 +76,10 @@ function upsertResource(procname, path) {
 			db.resources[path].procs.push(procname);
 			db.resources[path].procs = _.uniq(db.resources[path].procs);
 		}
-		db.processes[procname].resources.push(path);
-		db.processes[procname].resources = _.uniq(db.processes[procname].resources);
+		if(db.processes[procname]){
+			db.processes[procname].resources.push(path);
+			db.processes[procname].resources = _.uniq(db.processes[procname].resources);
+		}
 	}
 }
 
