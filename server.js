@@ -184,31 +184,29 @@ exports.load = (args, opts, cb) => {
     
     function serveFile(res, filepath) {
         filepath = path.resolve(filepath);
-        fs.exists(filepath, (found) => {
-            if (found) {
-                switch (path.extname(filepath)) {
-                    case '.json':
-                        res.setHeader('Content-Type', 'application/json');
-                        break;
-                    case '.js':
-                        res.setHeader('Content-Type', 'application/javascript');
-                        break;
+        if (fs.existsSync(filepath)) {
+            switch (path.extname(filepath)) {
+                case '.json':
+                    res.setHeader('Content-Type', 'application/json');
+                    break;
+                case '.js':
+                    res.setHeader('Content-Type', 'application/javascript');
+                    break;
+            }
+            fs.readFile(filepath, 'utf8', (e, content) => {
+                if (e == null) {
+                    res.setHeader('Content-length', content.length);
+                    res.end(content);
                 }
-                fs.readFile(filepath, 'utf8', (e, content) => {
-                    if (e == null) {
-                        res.setHeader('Content-length', content.length);
-                        res.end(content);
-                    }
-                    else {
-                        cli.error(e);
-                        sendCode(res, 500);
-                    }
-                });
-            }
-            else {
-                sendCode(res, 404);
-            }
-        });
+                else {
+                    cli.error(e);
+                    sendCode(res, 500);
+                }
+            });
+        }
+        else {
+            sendCode(res, 404);
+        }
     }
     
     function sendCode(res, code) {
