@@ -106,6 +106,32 @@ function initializeDb(cb) {
 	});
 }
 
+function archiveDb(name, cb) {
+    const archivePath = path.resolve('./archive');
+    if (!fs.existsSync(archivePath)) {
+        fs.mkdirSync(archivePath);
+    }
+    let filepath = path.join(archivePath, `${name}`);
+    let c = 1;
+    let suffix = '';
+    while (fs.existsSync(`${filepath}${suffix}.json`)) {
+    	suffix = `-${++c}`;
+    }
+    filepath = `${filepath}${suffix}.json`;
+	fs.writeFile(filepath, JSON.stringify(db), (err) => {
+		cli.debug(`db archived to ${filepath}`);
+		if (err) {
+			cli.error(err);
+			if (_.isFunction(cb)) {
+				cb(err);
+			}
+		}
+		else {
+			initializeDb(cb);
+		}
+	});
+}
+
 function initializeProcessor(dbWriteFreqInSeconds) {
 	fs.stat(dbFilePath,(err) => {
 		if(err) {
@@ -174,6 +200,7 @@ function handle(evt) {
 	});
 }
 handle.initializeDb = initializeDb;
+handle.archiveDb = archiveDb;
 handle.initializeProcessor = initializeProcessor;
 handle.updateConfig = (cfg) => {
 	config = cfg;

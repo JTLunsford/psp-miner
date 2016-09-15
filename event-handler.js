@@ -67,18 +67,27 @@ module.exports = (dbWriteFreqInSeconds, url) => {
 
 function connectSocket(url) {
     let reconnecting;
-    if (socket === void 0 || socket.readyState > 1) {
+    if (socket === void 0 || socket.readyState != 1) {
+    	let opening;
         socket = new ws(url);
         socket.on('open', () => {
+        	clearTimeout(opening);
             clearInterval(reconnecting);
             cli.debug('socket connected');
         }).on('close', () => {
+        	clearTimeout(opening);
             reconnecting = setTimeout(() => {
-                cli.debug('attempting reconnect...')
+                cli.debug('socket closed - attempting reconnect...');
                 connectSocket(url);
             }, 5000);
         }).on('error', (e) => {
             cli.error(e);
         });
+        opening = setTimeout(() => {
+        	if (socket.readyState == 0) {
+                cli.debug('socket never connected - attempting reconnect...');
+                connectSocket(url);
+        	}
+        }, 5000);
     }
 }
