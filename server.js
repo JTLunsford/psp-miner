@@ -193,10 +193,10 @@ exports.load = (args, opts, cb) => {
                     res.setHeader('Content-Type', 'application/javascript');
                     break;
             }
-            fs.readFile(filepath, 'utf8', (e, content) => {
+            fs.readFile(filepath, (e, buf) => {
                 if (e == null) {
-                    res.setHeader('Content-length', content.length);
-                    res.end(content);
+                    res.setHeader('Content-length', buf.length);
+                    res.end(buf.toString('utf8'));
                 }
                 else {
                     cli.error(e);
