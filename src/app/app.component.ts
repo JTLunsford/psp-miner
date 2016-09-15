@@ -4,4 +4,9 @@ import { Component } from '@angular/core';
     selector: 'psp-miner',
     template: '<h1>psp miner!</h1>'
 })
-export class AppComponent { }
+export class AppComponent {
+    constructor () {
+        console.log('here!');
+    }
+    
+}

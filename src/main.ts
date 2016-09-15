@@ -4,6 +4,7 @@ import 'zone.js/dist/zone';
 
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppComponent } from './app/app.component';
 
 @NgModule({
@@ -13,3 +14,5 @@ import { AppComponent } from './app/app.component';
     bootstrap: [ AppComponent ]
 })
 class PspMinerModule {};
+
+platformBrowserDynamic().bootstrapModule(PspMinerModule);
