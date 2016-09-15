@@ -111,7 +111,13 @@ function archiveDb(name, cb) {
     if (!fs.existsSync(archivePath)) {
         fs.mkdirSync(archivePath);
     }
-    const filepath = path.join(archivePath, `${name}.json`);
+    let filepath = path.join(archivePath, `${name}`);
+    let c = 1;
+    let suffix = '';
+    while (fs.existsSync(`${filepath}${suffix}.json`)) {
+    	suffix = `-${++c}`;
+    }
+    filepath = `${filepath}${suffix}.json`;
 	fs.writeFile(filepath, JSON.stringify(db), (err) => {
 		cli.debug(`db archived to ${filepath}`);
 		if (err) {
