@@ -2,22 +2,30 @@
 
 const cli = require('cli');
 const ws = require('ws');
-const request = require('request');
 
 const utility = require('./utility');
 
+const config = require('./config.json');
+
 let socket, processor;
-module.exports = (dbWriteFreqInSeconds, url) => {
+module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
     const local = url === void 0 || url === null;
     if (local) {
 		processor = require('./processor');
 		cli.debug(`writing db every ${dbWriteFreqInSeconds} seconds`);
+		processor.updateConfig(config);
 		processor.initializeProcessor(dbWriteFreqInSeconds);
+	    if (typeof configUpdated == 'function') {
+		    configUpdated({
+		        event: 'config-update',
+		        data: require('./config.json')
+		    });
+	    }
 		cli.debug('processing events locally');
     }
     else {
         cli.debug(`sending events to ${url}`);
-        connectSocket(url);
+        connectSocket(url, configUpdated);
     }
     function handle(evt) {
 		if (local) {
@@ -43,29 +51,10 @@ module.exports = (dbWriteFreqInSeconds, url) => {
 		}
 	}
 	handle.processor = processor;
-	handle.downloadConfig = (cb) => {
-		const configUrl = `${url}/config.json`;
-		cli.debug(`downloading config from ${configUrl}`)
-		request.get(configUrl).on('response', (res) => {
-		  	if (res.statusCode === 200) {
-		  		let body = "";
-		  		res.setEncoding('utf8');
-		  		res.on('data', (data) => {
-		  			body += data;
-		  		});
-		  		res.on('end', () => {
-	            	utility.parseJson(body, cb);
-		  		});
-		  	}
-		  	else {
-		  		cb(`ERROR DOWNLOADING CONFIG: HTTP GET ${configUrl} -> ${res.statusCode} - ${res.statusMessage}`);
-		  	}
-		  });
-	};
 	return handle;
 };
 
-function connectSocket(url) {
+function connectSocket(url, serverEventListener) {
     let reconnecting;
     if (socket === void 0 || socket.readyState != 1) {
     	let opening;
@@ -78,15 +67,26 @@ function connectSocket(url) {
         	clearTimeout(opening);
             reconnecting = setTimeout(() => {
                 cli.debug('socket closed - attempting reconnect...');
-                connectSocket(url);
+                connectSocket(url, serverEventListener);
             }, 5000);
+        }).on('message', (msg) => {
+        	utility.parseJson(msg, (e, serverEvent) => {
+        		if (e == null) {
+        		    if (typeof serverEventListener == 'function') {
+        			    serverEventListener(serverEvent);
+        		    }
+        		}
+        		else {
+        			cli.error(e);
+        		}
+        	});
         }).on('error', (e) => {
             cli.error(e);
         });
         opening = setTimeout(() => {
         	if (socket.readyState == 0) {
                 cli.debug('socket never connected - attempting reconnect...');
-                connectSocket(url);
+                connectSocket(url, serverEventListener);
         	}
         }, 5000);
     }
