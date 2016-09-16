@@ -8,11 +8,12 @@ import { HttpModule }               from '@angular/http';
 import { platformBrowserDynamic }   from '@angular/platform-browser-dynamic';
 import { AppComponent }             from './app/app.component';
 import { ApiService }               from './app/services/api.service';
+import { DataService }              from './app/services/data.service';
 
 @NgModule({
     declarations:   [ AppComponent ],
     imports:        [ BrowserModule, HttpModule ],
-    providers:      [ ApiService ],
+    providers:      [ ApiService, DataService ],
     bootstrap:      [ AppComponent ]
 })
 class PspMinerModule {};

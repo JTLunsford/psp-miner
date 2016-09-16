@@ -1,17 +1,14 @@
 import { Component }    from '@angular/core';
-import { ApiService }   from './services/api.service';
+import { DataService }  from './services/data.service';
 
 @Component({    
     selector: 'psp-miner',
     template: '<h1>psp miner!</h1>'
 })
 export class AppComponent {
-    constructor ( private apiService: ApiService ) {
+    constructor ( private dataService: DataService ) {
         
-        this.apiService.getLive().subscribe((res)=>{
-            console.log(res.json());
-        });
-        
+        this.dataService.startLiveData();
     }
     
 }

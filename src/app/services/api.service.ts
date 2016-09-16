@@ -8,15 +8,31 @@ export class ApiService {
     
     constructor( private http:Http ) { }
     
-    getLive() {
+    getData() {
         return this.http.get( this.urlSuffix + '/api/data' );
     }
     
-    saveAndClear( name:string ) {
+    postArchive( name:string ) {
          return this.http.post( this.urlSuffix + '/api/data/archive', { name:name } );
     }
     
-    clear() {
+    getArchive() {
+         return this.http.get( this.urlSuffix + '/api/data/archive' );
+    }
+    
+    getArchiveName( name:string ) {
+         return this.http.get( this.urlSuffix + '/api/data/archive/' + name );
+    }
+    
+    getConfig() {
+         return this.http.get( this.urlSuffix + '/api/config' );
+    }
+    
+    putConfig( config:any ) {
+         return this.http.put( this.urlSuffix + '/api/config', config );
+    }
+    
+    deleteData() {
          return this.http.delete( this.urlSuffix + '/api/data' );
     }
 }
