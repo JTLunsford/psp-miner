@@ -1,10 +1,12 @@
 {
     "compilerOptions": {
+        "module": "commonjs",
         "target": "es5",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
     },
     "exclude": [
-        "node_modules"
+        "node_modules",
+        ".c9"
     ]
 }
