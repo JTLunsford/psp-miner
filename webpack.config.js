@@ -15,6 +15,9 @@ module.exports = {
         extensions: ['', '.js', '.ts']
     },
     plugins: [
-        new HtmlWebpackPlugin()
+        new HtmlWebpackPlugin({
+          title: 'psp miner',
+          template: './src/index.html'
+        })
     ]
 };
