@@ -4,8 +4,11 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 
+const _ = require('lodash');
+
 const cli = require('cli');
 const ws = require('ws');
+const uuid = require('uuid');
 
 const utility = require('./utility');
 
@@ -13,11 +16,14 @@ exports.opts = {
     "db-write-freq":    [false, 'frequency, in seconds, to write db.json', 'int', 30]
 };
 
-const archiveFolderPath = path.resolve('./archive');
+let clients = [];
 
 exports.load = (args, opts, cb) => {
+    let config, configJson;
+    const archiveFolderPath = path.resolve('./archive');
+    setConfig(require('./config.json'));
     const event = require('./event-handler')(opts['db-write-freq']);
-    new ws.Server({
+    const wsServer = new ws.Server({
         server: http.createServer((req, res) => {
             let route = req.url.split('/').slice(1);
             if (route.length == 1 && route[0].length == 0) {
@@ -150,13 +156,14 @@ exports.load = (args, opts, cb) => {
                         case 'config':
                             switch (req.method) {
                                 case 'GET':
-                                    serveFile(res, './config.json');
+                                    res.setHeader('Content-Type', 'application/json');
+                                    res.end(configJson);
                                     break;
                                 case 'PUT':
                                     parseJsonBody(req, res, (config) => {
-                                        cli.debug(`updating config - ${JSON.stringify(config)}`)
-                                        event.processor.updateConfig(config);
-                                        fs.writeFileSync('./config.json', JSON.stringify(config, null, '\t'));
+                                        cli.debug(`updating config - ${JSON.stringify(config)}`);
+                                        updateConfig(config);
+                                        fs.writeFileSync('./config.json', configJson);
                                         res.end();
                                     });
                                     break;
@@ -180,6 +187,8 @@ exports.load = (args, opts, cb) => {
             }
         )
     }).on('connection', (socket) => {
+        socket.__id = uuid.v4();
+        clients.push(socket);
         socket.on('message', (msg) => {
             utility.parseJson(msg, (e, obj) => {
                 if (e === null) {
@@ -194,16 +203,26 @@ exports.load = (args, opts, cb) => {
                 }
             });
         });
+        socket.on('close', () => {
+            removeClient(socket.__id);
+        });
         socket.on('error', (e) => {
             cli.error(`SOCKET CLIENT ERROR:\n${e.stack}`);
+            if (socket.readyState < 3) {
+                socket.close();
+                removeClient(socket.__id);
+            }
         });
+        socket.send(JSON.stringify({
+            event: 'config-update',
+            data: config
+        }));
     }).on('error', (e) => {
         cli.error(`SOCKET SERVER ERROR:\n${e.stack}`);
     });
     
     function parseJsonBody(req, res, cb) {
         if (req.headers['content-type'] == 'application/json') {
-            cli.debug('parsing json body');
             parseBody(req, (json) => {
                 utility.parseJson(json, (e, obj) => {
                     if (e === null) {
@@ -274,7 +293,7 @@ exports.load = (args, opts, cb) => {
                     res.setHeader('Content-Type', 'text/css');
                     break;
             }
-            fs.readFile(filepath, (e, buf) => {
+            readFile(filepath, (e, buf) => {
                 if (e == null) {
                     res.setHeader('Content-length', buf.length);
                     res.end(buf.toString('utf8'));
@@ -298,5 +317,40 @@ exports.load = (args, opts, cb) => {
     function send405(res, allowed) {
         res.setHeader('Allow', allowed);
         sendCode(res, 405)
+    }
+    
+    function readFile(filepath, cb) {
+        fs.readFile(filepath, (e, buf) => {
+            if (e == null) {
+                cb(null, buf);
+            }
+            else {
+                cb(e);
+            }
+        });
+    }
+    
+    function updateConfig(newConfig) {
+        setConfig(newConfig);
+        event.processor.updateConfig(config);
+        _.each(clients, (c) => {
+            if (c.readyState == 1) {
+                c.send(JSON.stringify({
+                    event: 'config-update',
+                    data: config
+                }));
+            }
+        });
+    }
+    
+    function setConfig(newConfig) {
+        config = newConfig;
+        configJson = JSON.stringify(newConfig, null, '\t');
+    }
+    
+    function removeClient(id) {
+        clients = _.filter(clients, (c) => {
+            return c.__id != id;
+        });
     }
 };

@@ -1,5 +1,6 @@
 node_modules/
 npm-debug.log
 db.json
+pids-to-kill.json
 typings/
 archive/
