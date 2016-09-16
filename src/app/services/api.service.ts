@@ -1,10 +1,10 @@
-import { Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
+import { Injectable }       from '@angular/core';
+import { Http, Headers }    from '@angular/http';
 import 'rxjs/add/operator/map';
 
 @Injectable()
 export class ApiService {
-    private urlSuffix:string = 'https://psp-miner-ironman9967.c9users.io';
+    private urlSuffix:string = ''; //https://psp-miner-ironman9967.c9users.io
     
     constructor( private http:Http ) { }
     
@@ -13,7 +13,7 @@ export class ApiService {
     }
     
     saveAndClear( name:string ) {
-         return this.http.post( this.urlSuffix + '/api/data/archive', JSON.stringify( { name:name } ) );
+         return this.http.post( this.urlSuffix + '/api/data/archive', { name:name } );
     }
     
     clear() {

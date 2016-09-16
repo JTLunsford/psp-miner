@@ -62,7 +62,7 @@ exports.load = (args, opts, cb) => {
                                         case '':
                                             switch (req.method) {
                                                 case 'POST':
-                                                    parseFormBody(req, res, (fields) => {
+                                                    parseJsonBody(req, res, (fields) => {
                                                         if (fields.name !== void 0) {
                                                             cli.debug(`creating archive: ${fields.name}`)
                                                             event.processor.archiveDb(fields.name, (e) => {

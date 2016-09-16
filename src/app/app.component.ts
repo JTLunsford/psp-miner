@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { ApiService } from './services/api.service';
+import { Component }    from '@angular/core';
+import { ApiService }   from './services/api.service';
 
 @Component({    
     selector: 'psp-miner',
@@ -8,9 +8,10 @@ import { ApiService } from './services/api.service';
 export class AppComponent {
     constructor ( private apiService: ApiService ) {
         
-        this.apiService.postArchive( 'bob' ).subscribe((res)=>{
-            console.log(res);
+        this.apiService.getLive().subscribe((res)=>{
+            console.log(res.json());
         });
+        
     }
     
 }
