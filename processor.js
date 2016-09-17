@@ -7,17 +7,13 @@ const _ = require('lodash');
 const cidr = require('cidr-js');
 const minimatch = require('minimatch');
 
-let config = require('./config.json');
-
-let skipProcNames = _.map(config.skip, 'proc');
-cli.debug('skip proc names: '+JSON.stringify(skipProcNames));
-
+let config;
 let dbLoaded = false;
 
 let db;
 function upsertProcess(procname, parent) {
 	cli.debug('upserting');
-	if(!_.some(skipProcNames,(n)=>{return n===procname || procname.match(n) !== null;})) {
+	if(!_.some(_.map(config.skip, 'proc'),(n)=>{return n===procname || procname.match(n) !== null;})) {
 		cli.debug(`proc ${procname} not skipped`);
 		if(db.processes[procname] === void 0) {
 			db.processes[procname] = {
@@ -203,6 +199,7 @@ handle.initializeDb = initializeDb;
 handle.archiveDb = archiveDb;
 handle.initializeProcessor = initializeProcessor;
 handle.updateConfig = (cfg) => {
+	cli.debug('processor config updated');
 	config = cfg;
 };
 

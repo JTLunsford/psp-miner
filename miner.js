@@ -1,11 +1,15 @@
 "use strict"
 
 const exec = require('child_process').exec;
+const fs = require('fs');
+const path = require('path');
 
 const cli = require('cli');
 const _ = require('lodash');
 const _async = require('async');
 const ps = require('ps-node');
+
+const pidsToKillPath = path.resolve('./pids-to-kill.json');
 
 const eventHandler = require('./event-handler');
 
@@ -40,36 +44,20 @@ exports.load = (args, opts, cb) => {
 			cli.debug('running test-internet');
 			setInterval(() => {
 				exec('./test-internet',(err) => {
-					cli.debug('test-internet done');
+					if (err) {
+						cli.error(err);
+					}
+					else {
+						cli.debug('test-internet done');
+					}
 				});
 			}, 2500);
 		}
-		
-		event = eventHandler(opts['db-write-freq'], opts.url);
 
 		if(opts["test-child"]) {
 			setTimeout(() => {
 				exec('(sleep 5; echo "test";)');
 			},10000);
-		}
-
-		if (!opts["no-sysdig"]) {
-			_async.waterfall([
-				
-				(cb) => {
-					loadConfig(opts, cb);
-				},
-				
-				lookupSysdigProcs,
-				killSysdigProcs,
-				
-				startSysdig
-				
-			], (e) => {
-				if (e !== null) {
-					cli.error(e);
-				}
-			});
 		}
 
 		if (opts["test-events"]) {
@@ -91,6 +79,32 @@ exports.load = (args, opts, cb) => {
 				});
 			}, 2500);
 		}
+		
+		event = eventHandler(opts['db-write-freq'], opts.url, (serverEvent) => {
+			switch (serverEvent.event) {
+				case 'config-update':
+					config = serverEvent.data;
+					cli.debug(`miner config updated - ${JSON.stringify(config)}`);
+					if (!opts["no-sysdig"]) {
+						_async.waterfall([
+							loadPidsToKill,
+							killPids,
+							startSysdig
+						], (e, pid) => {
+							if (e === null) {
+								savePidToKill(pid);
+							}
+							else {
+								cli.error(e);
+							}
+						});
+					}
+					break;
+				default:
+					cli.info(`unknown server event ${serverEvent.event} received`);
+					break;
+			}
+		});
 	}
 	else{
 		cli.error('start is missing');
@@ -194,62 +208,54 @@ exports.load = (args, opts, cb) => {
 		}
 	}
 	
-	function loadConfig(opts, cb) {
-		if (opts.url) {
-			event.downloadConfig((e, cfg) => {
-				if (e === null) {
-					cli.debug('config downloaded');
-					config = cfg;
+	function loadPidsToKill(cb) {
+		if (!fs.existsSync(pidsToKillPath)) {
+			fs.writeFileSync(pidsToKillPath, '[]', 'utf8');
+		}
+		fs.readFile(pidsToKillPath, 'utf8', (e, pidsToKillJson) => {
+			if (e == null) {
+				cb(null, JSON.parse(pidsToKillJson));
+			}
+			else {
+				cb(`ERROR LOADING pids-to-kill.json:\n${e.stack}`);
+			}
+		});
+	}
+	
+	function killPids(pids, cb) {
+		cli.debug(`killing ${pids.length} pid(s)`);
+		_async.each(pids, (pid, cb) => {
+			ps.kill(pid, (e) => {
+				if (e != null && e.message.indexOf('No such process') == -1) {
+					cb(e);
 				}
 				else {
-					cli.debug('config loaded locally');
-					config = require('./config.json');
-					cli.error(e);
+					cli.debug(`killed pid: ${pid}`);
+					cb(null);
 				}
-				cli.debug(`config: ${JSON.stringify(config)}`);
-				cb(null);
-			});
-		}
-		else {
-			config = require('./config.json');
-			process.nextTick(() => { cb(null); });
-		}
-	}
-	
-	function lookupSysdigProcs(cb) {
-		cli.debug('looking-up sysdig processes');
-		ps.lookup({
-			command: 'sysdig'
-		}, (e, sysdigProcs) => {
-			if (e === null) {
-				cb(null, sysdigProcs);
-			}
-			else {
-				cb(`ERROR LOOKING-UP SYSDIG PROCESSES:\n${e.stack}`);
-			}
-		});
-	}
-	
-	function killSysdigProcs(sysdigProcs, cb) {
-		cli.debug(`found ${sysdigProcs.length} sysdig pid(s) running`);
-		_async.each(sysdigProcs, (sysdigProc, cb) => {
-			cli.debug(`killing sysdig pid: ${sysdigProc.pid}`);
-			ps.kill(sysdigProc.pid, (e) => {
-				cb(e);
 			});
 		}, (e) => {
-			if (e === null) {
-				cb(null);
+			if (e == null) {
+				fs.writeFile(pidsToKillPath, '[]', 'utf8', (e) => {
+					if (e == null) {
+						cb(null);
+					}
+					else {
+						cb(`ERROR CLEARING pids-to-kill.json:\n${e.stack}`);
+					}
+				});
 			}
 			else {
-				cb(`ERROR KILLING SYSDIG PROCESSES:\n${e.stack}`);
+				cb(`ERROR KILLING PROCESSES:\n${e.stack}`);
 			}
 		});
 	}
 	
-	function startSysdig() {
+	function startSysdig(cb) {
 		cli.debug('starting sysdig');
-		let sysdig = exec(`sysdig ${buildSysdigArgs()}`);
+		console.log(`sysdig ${buildSysdigArgs()}`);
+		// let sysdig = exec(`sysdig ${buildSysdigArgs()}`);
+		let sysdig = exec(`ls`);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
@@ -260,6 +266,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.stderr.on('data', (err) => {
 			cli.fatal(err);
 		});
+		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
 	
 	function buildSysdigArgs() {
@@ -299,5 +306,14 @@ exports.load = (args, opts, cb) => {
 		args = args.join(' ');
 		cli.debug(`sysdig filter: ${args}`);
 		return args;
+	}
+	
+	function savePidToKill(pid) {
+		let pidsToKill = [];
+		if (fs.existsSync(pidsToKillPath)) {
+			pidsToKill = JSON.parse(fs.readFileSync(pidsToKillPath, 'utf8'));
+		}
+		pidsToKill.push(pid);
+		fs.writeFileSync(pidsToKillPath, JSON.stringify(pidsToKill), 'utf8');
 	}
 };
