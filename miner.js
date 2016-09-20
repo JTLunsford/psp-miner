@@ -19,6 +19,7 @@ exports.opts = {
 	start: 				['s', 'start the capture'],
 	fd:					['f', 'capture file descriptors'],
 	proc:   			['p', 'capture the child/parent relationships'],
+	"proc-in-prog":		['g', 'capture processes that are in progress at app start'],
 	"no-sysdig":		['n', 'do not spawn sysdig process'],
 	"test-child":		['c', 'add a test child/parent'],
 	"test-events":		['e', 'add a test child/parent'],
@@ -28,9 +29,9 @@ exports.opts = {
     "db-write-freq":    [false, 'frequency, in seconds, to write db.json', 'int', 30]
 };
 
-
 let event;
 exports.load = (args, opts, cb) => {
+	let firstRun = true;
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
 	if(opts.start){
@@ -85,6 +86,17 @@ exports.load = (args, opts, cb) => {
 				case 'config-update':
 					config = serverEvent.data;
 					cli.debug(`miner config updated - ${JSON.stringify(config)}`);
+					if (firstRun && opts['proc-in-prog']) {
+						firstRun = false;
+						reportAlreadyRunningProcs((e, events) => {
+							if (e == null) {
+								_.each(events, event);
+							}
+							else {
+								cli.error(e);
+							}
+						});
+					}
 					if (!opts["no-sysdig"]) {
 						_async.waterfall([
 							loadPidsToKill,
@@ -315,5 +327,59 @@ exports.load = (args, opts, cb) => {
 		}
 		pidsToKill.push(pid);
 		fs.writeFileSync(pidsToKillPath, JSON.stringify(pidsToKill), 'utf8');
+	}
+	
+	function reportAlreadyRunningProcs(cb) {
+		let events;
+		exec('ps -el', (e, stdout, stderr) => {
+			if (e == null) {
+				if (stderr.length == 0) {
+					const re = /\d \w *\d+ *(\d+) *(\d+).*:\d{2} (\S*)/g;
+					let match = re.exec(stdout);
+					events = [];
+					while (match != null) {
+						const r = {
+							procname: match[3],
+							pid: parseInt(match[1]),
+							open: false,
+							eventType: 'running'
+						};
+						if (parseInt(match[2]) > 0) {
+							r.relation = parseInt(match[2]);
+						}
+						events.push(r);
+						match = re.exec(stdout);
+					}
+					events = _.reduce(events, (unskipped, psResult) => {
+						if (!skip(psResult) && psResult.procname != 'ps') {
+							unskipped.push(psResult);
+						}
+						return unskipped;
+					}, []);
+					_.each(events, (current) => {
+						if (current.relation > 0) {
+							const parent = _.find(events, (possibleParent) => {
+								return possibleParent.pid == current.relation;
+							});
+							if (parent != void 0) {
+								current.relation = {
+									pid: current.pid,
+									pProcName: current.procname,
+									ptid: parent.pid,
+									ptProcName: parent.procname
+								};
+							}
+						}
+					});
+					cb(null, events);
+				}
+				else {
+					cb(stderr);
+				}
+			}
+			else {
+				cb(e);
+			}
+		});
 	}
 };
