@@ -1,0 +1,15 @@
+html,body {
+  height:100%;
+  margin:0;
+}
+
+psp-miner {
+  display: block;
+  height:100%;
+  min-height:100%;
+  background: url(https://upload.wikimedia.org/wikipedia/en/thumb/1/15/Logo_D3.svg/256px-Logo_D3.svg.png) center center no-repeat scroll #500A20;
+}
+
+html>body psp-miner {
+  height:auto;
+}

@@ -9,23 +9,29 @@ export class DataService {
     private selectedData: any;
     private live: Observable<boolean>;
     private liveObserver: Observer<boolean>;
+    public data: Observable<IData>;
+    private dataObserver: Observer<IData>;
     
     constructor( private apiService:ApiService ) {
         
         this.live = Observable.create( observer => {
             this.liveObserver = observer;
-            observer.next(false);
+            observer.next(true);
         });
         
+        this.live.share();
         
         this.liveData = Observable.create( observer => {
             let si;
             this.live.subscribe({
                 next: (live) => {
                     if(live) {
+                        this.apiService.getData().subscribe( data => {
+                            observer.next(data.json());
+                        });
                         si = setInterval( () => {
                             this.apiService.getData().subscribe( data => {
-                                observer.next(data);
+                                observer.next(data.json());
                             });
                         }, 60000 );
                     }
@@ -34,9 +40,17 @@ export class DataService {
                     }
                 }
             })
-            
         });
         
+        this.liveData.share();
+        
+        this.data = Observable.create( observer => {
+            this.liveData.subscribe( data => {
+               observer.next(data); 
+            });
+        });
+        
+        this.data.share();
     }
     
     startLiveData() {
