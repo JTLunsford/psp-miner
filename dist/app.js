@@ -65,6 +65,7 @@
 	var app_component_1 = __webpack_require__(338);
 	var api_service_1 = __webpack_require__(340);
 	var data_service_1 = __webpack_require__(339);
+	var simulation_service_1 = __webpack_require__(668);
 	// import { enableProdMode }                     from '@angular/core';
 	// enableProdMode();
 	var PspMinerModule = (function () {
@@ -74,7 +75,7 @@
 	        core_1.NgModule({
 	            declarations: [app_component_1.AppComponent],
 	            imports: [platform_browser_1.BrowserModule, http_1.HttpModule],
-	            providers: [api_service_1.ApiService, data_service_1.DataService],
+	            providers: [api_service_1.ApiService, data_service_1.DataService, simulation_service_1.SimulationService],
 	            bootstrap: [app_component_1.AppComponent]
 	        }), 
 	        __metadata('design:paramtypes', [])
@@ -48024,12 +48025,13 @@
 	};
 	var core_1 = __webpack_require__(315);
 	var data_service_1 = __webpack_require__(339);
-	var d3 = __webpack_require__(668);
+	var simulation_service_1 = __webpack_require__(668);
 	var AppComponent = (function () {
-	    function AppComponent(dataService, elRef) {
+	    function AppComponent(dataService, elRef, simulationService) {
 	        var _this = this;
 	        this.dataService = dataService;
 	        this.elRef = elRef;
+	        this.simulationService = simulationService;
 	        this.loaded = false;
 	        this.el = elRef.nativeElement;
 	        this.d3Width = this.el.offsetWidth;
@@ -48037,86 +48039,45 @@
 	        this.dataService.data.subscribe(function (data) {
 	            _this.data = data;
 	            _this.loaded = true;
-	            _this.loadVisualization();
+	            _this.canvas = document.querySelector("canvas");
+	            _this.context = _this.canvas.getContext("2d");
 	        });
 	    }
-	    AppComponent.prototype.loadVisualization = function () {
-	        var d3Any = d3;
-	        var nodes = d3Any.range(1000).map(function (i) {
-	            return {
-	                index: i
-	            };
+	    AppComponent.prototype.ngAfterViewChecked = function () {
+	        var _this = this;
+	        this.simulationService.update.subscribe(function (drawables) {
+	            if (_this.loaded) {
+	                _this.tick(drawables);
+	            }
 	        });
-	        var links = d3Any.range(nodes.length - 1).map(function (i) {
-	            return {
-	                source: Math.floor(Math.sqrt(i)),
-	                target: i + 1
-	            };
+	    };
+	    AppComponent.prototype.tick = function (drawables) {
+	        var _this = this;
+	        this.context.clearRect(0, 0, this.d3Width, this.d3Height);
+	        this.context.save();
+	        this.context.translate(this.d3Width / 2, this.d3Height / 2);
+	        this.context.beginPath();
+	        drawables.links.forEach(function (d) {
+	            _this.context.moveTo(d.source.x, d.source.y);
+	            _this.context.lineTo(d.target.x, d.target.y);
 	        });
-	        var simulation = d3Any.forceSimulation(nodes)
-	            .force("charge", d3Any.forceManyBody())
-	            .force("link", d3Any.forceLink(links).distance(20).strength(1))
-	            .force("x", d3Any.forceX())
-	            .force("y", d3Any.forceY())
-	            .on("tick", ticked);
-	        var canvas = document.querySelector("canvas");
-	        var context = canvas.getContext("2d");
-	        var width = this.d3Width;
-	        var height = this.d3Height;
-	        d3Any.select(canvas)
-	            .call(d3Any.drag()
-	            .container(canvas)
-	            .subject(dragsubject)
-	            .on("start", dragstarted)
-	            .on("drag", dragged)
-	            .on("end", dragended));
-	        function ticked() {
-	            context.clearRect(0, 0, width, height);
-	            context.save();
-	            context.translate(width / 2, height / 2);
-	            context.beginPath();
-	            links.forEach(drawLink);
-	            context.strokeStyle = "#aaa";
-	            context.stroke();
-	            context.beginPath();
-	            nodes.forEach(drawNode);
-	            context.fill();
-	            context.strokeStyle = "#fff";
-	            context.stroke();
-	            context.restore();
-	        }
-	        function dragsubject() {
-	            return simulation.find(d3Any.event.x - width / 2, d3Any.event.y - height / 2);
-	        }
-	        function dragstarted() {
-	            if (!d3Any.event.active)
-	                simulation.alphaTarget(0.3).restart();
-	            d3Any.event.subject.fx = d3Any.event.subject.x;
-	            d3Any.event.subject.fy = d3Any.event.subject.y;
-	        }
-	        function dragged() {
-	            d3Any.event.subject.fx = d3Any.event.x;
-	            d3Any.event.subject.fy = d3Any.event.y;
-	        }
-	        function dragended() {
-	            if (!d3Any.event.active)
-	                simulation.alphaTarget(0);
-	            d3Any.event.subject.fx = null;
-	            d3Any.event.subject.fy = null;
-	        }
-	        function drawLink(d) {
-	            context.moveTo(d.source.x, d.source.y);
-	            context.lineTo(d.target.x, d.target.y);
-	        }
-	        function drawNode(d) {
-	            context.moveTo(d.x + 3, d.y);
-	            context.arc(d.x, d.y, 3, 0, 2 * Math.PI);
-	        }
+	        this.context.strokeStyle = "#aaa";
+	        this.context.stroke();
+	        this.context.beginPath();
+	        drawables.nodes.forEach(function (d) {
+	            _this.context.moveTo(d.x + 3, d.y);
+	            _this.context.arc(d.x, d.y, 3, 0, 2 * Math.PI);
+	        });
+	        this.context.fill();
+	        this.context.strokeStyle = "#fff";
+	        this.context.stroke();
+	        this.context.restore();
 	    };
 	    AppComponent.prototype.onResize = function (event) {
 	        this.d3Width = this.el.offsetWidth;
 	        this.d3Height = this.el.offsetHeight;
 	        console.log(this.d3Width, this.d3Height);
+	        //this.loadVisualization();
 	    };
 	    __decorate([
 	        core_1.HostListener('window:resize', ['$event']), 
@@ -48129,7 +48090,7 @@
 	            selector: 'psp-miner',
 	            template: "<canvas [attr.width]=\"d3Width\" [attr.height]=\"d3Height\"></canvas>"
 	        }), 
-	        __metadata('design:paramtypes', [data_service_1.DataService, core_1.ElementRef])
+	        __metadata('design:paramtypes', [data_service_1.DataService, core_1.ElementRef, simulation_service_1.SimulationService])
 	    ], AppComponent);
 	    return AppComponent;
 	}());
@@ -65319,6 +65280,85 @@
 
 /***/ },
 /* 668 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+	    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+	    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+	    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+	    return c > 3 && r && Object.defineProperty(target, key, r), r;
+	};
+	var __metadata = (this && this.__metadata) || function (k, v) {
+	    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+	};
+	var core_1 = __webpack_require__(315);
+	var rxjs_1 = __webpack_require__(343);
+	var d3 = __webpack_require__(669);
+	var SimulationService = (function () {
+	    function SimulationService() {
+	        var _this = this;
+	        this.distance = 20;
+	        this.d3 = d3;
+	        this.links = [];
+	        this.nodes = [];
+	        this.update = rxjs_1.Observable.create(function (observer) {
+	            _this.updateObserver = observer;
+	        });
+	        this.update.share();
+	        var last = {
+	            name: 'yo' + Math.floor(Math.random() * 100)
+	        };
+	        this.nodes.push(last);
+	        this.nodes;
+	        setInterval(function () {
+	            var current = {
+	                name: 'yo' + Math.floor(Math.random() * 100)
+	            };
+	            _this.nodes.push(current);
+	            _this.links.push({
+	                target: current.name,
+	                source: last.name
+	            });
+	            last = Object.assign({}, current);
+	            _this.runSimulation();
+	        }, 1000);
+	    }
+	    SimulationService.prototype.runSimulation = function () {
+	        var _this = this;
+	        if (this.simulation) {
+	            //console.log('stoping sim');
+	            this.simulation.stop();
+	        }
+	        var _nodes = JSON.parse(JSON.stringify(this.nodes));
+	        var _links = JSON.parse(JSON.stringify(this.links));
+	        this.simulation = this.d3.forceSimulation(_nodes)
+	            .force("charge", this.d3.forceManyBody())
+	            .force("link", this.d3.forceLink(_links).id(function (d) { return d.name; }).distance(this.distance).strength(1))
+	            .force("x", this.d3.forceX())
+	            .force("y", this.d3.forceY())
+	            .on("tick", function () {
+	            //console.log('tick');
+	            _this.updateObserver.next({
+	                nodes: _nodes,
+	                links: _links
+	            });
+	        })
+	            .on("end", function () {
+	            //console.log('end');
+	        });
+	    };
+	    SimulationService = __decorate([
+	        core_1.Injectable(), 
+	        __metadata('design:paramtypes', [])
+	    ], SimulationService);
+	    return SimulationService;
+	}());
+	exports.SimulationService = SimulationService;
+
+
+/***/ },
+/* 669 */
 /***/ function(module, exports, __webpack_require__) {
 
 	// https://d3js.org Version 4.2.3. Copyright 2016 Mike Bostock.
