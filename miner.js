@@ -265,8 +265,7 @@ exports.load = (args, opts, cb) => {
 	
 	function startSysdig(cb) {
 		cli.debug('starting sysdig');
-		console.log(`sysdig ${buildSysdigArgs()}`);
-		// let sysdig = exec(`sysdig ${buildSysdigArgs()}`);
+		let sysdig = exec(`sysdig ${buildSysdigArgs()}`);
 		let sysdig = exec(`ls`);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
