@@ -268,7 +268,7 @@ exports.load = (args, opts, cb) => {
 	function startSysdig(cb) {
 		cli.debug('starting sysdig');
 		const sysdigCmd = `sysdig ${buildSysdigArgs()}`;
-		cli.debug(`running: ${sysdigCmd}`);
+		cli.debug(`executing: ${sysdigCmd}`);
 		let sysdig = exec(sysdigCmd);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
@@ -318,7 +318,6 @@ exports.load = (args, opts, cb) => {
 			args[args.length - 1] = `${args[args.length - 1]}"`;
 		}
 		args = args.join(' ');
-		cli.debug(`sysdig filter: ${args}`);
 		return args;
 	}
 	
