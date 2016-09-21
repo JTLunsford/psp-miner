@@ -240,13 +240,13 @@ exports.load = (args, opts, cb) => {
 			ps.kill(pid, (e) => {
 				if (e != null) {
 					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
-						cb(e);
+						cli.error(e);
 					}
 				}
 				else {
 					cli.debug(`killed pid: ${pid}`);
-					cb(null);
 				}
+				cb(null);
 			});
 		}, (e) => {
 			if (e == null) {
