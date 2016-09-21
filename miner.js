@@ -269,9 +269,6 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function startSysdig(cb) {
-		
-		cli.fatal('test');
-		
 		cli.debug('starting sysdig');
 		const sysdigCmd = `sysdig ${buildSysdigArgs()}`;
 		cli.debug(`executing: ${sysdigCmd}`);
@@ -285,7 +282,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.stderr.setEncoding('utf8');
 		sysdig.stderr.on('data', (err) => {
 			if (err.indexOf('warning') == -1) {
-				cli.fatal(err);
+				cli.error(`SYSDIG - ${err}`);
 			}
 			else {
 				cli.info(err);
