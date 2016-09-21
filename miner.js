@@ -281,8 +281,8 @@ exports.load = (args, opts, cb) => {
 		});
 		sysdig.stderr.setEncoding('utf8');
 		sysdig.stderr.on('data', (err) => {
-			if (err.indexOf('warning') == -1) {
-				cli.error(`SYSDIG - ${err}`);
+			if (err.indexOf('warning') > -1) {
+				cli.info(`SYSDIG WARNING - ${err}`);
 			}
 			else {
 				cli.fatal(`SYSDIG - ${err}`);
