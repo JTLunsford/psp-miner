@@ -243,7 +243,7 @@ exports.load = (args, opts, cb) => {
 						cli.error(e);
 					}
 					else {
-						cli.debug(`killed pid: ${pid}`);
+						cli.debug(`${pid} not found`);
 					}
 				}
 				else {
