@@ -276,8 +276,11 @@ exports.load = (args, opts, cb) => {
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
-				console.log('SYSDIG OUTPUT - ' + line);
-				consume(line);
+				try {
+					consume(line);
+				} catch (e) {
+					console.error("ASDFASDFASDF", e);
+				}
 			}
 		});
 		sysdig.stderr.setEncoding('utf8');
@@ -292,9 +295,6 @@ exports.load = (args, opts, cb) => {
 		sysdig.on('exit', (code) => {
 			cli.error(`SYSDIG EXIT ${code}`);
 		});
-		setInterval(() => {
-			console.log('sysdig pid: ' + sysdig.pid);
-		}, 30000);
 		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
 	
