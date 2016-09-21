@@ -162,8 +162,8 @@ exports.load = (args, opts, cb) => {
 			}
 			if(parsedData.processed) {
 				delete parsedData.eventRawData;
-				cli.debug('sending event');
-				cli.debug(JSON.stringify(parsedData,null,'\t'));
+				// cli.debug('sending event');
+				// cli.debug(JSON.stringify(parsedData,null,'\t'));
 				event(parsedData);
 			}
 		}
