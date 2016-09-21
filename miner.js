@@ -269,6 +269,9 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function startSysdig(cb) {
+		
+		cli.fatal('test');
+		
 		cli.debug('starting sysdig');
 		const sysdigCmd = `sysdig ${buildSysdigArgs()}`;
 		cli.debug(`executing: ${sysdigCmd}`);
