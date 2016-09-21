@@ -46,7 +46,7 @@ exports.load = (args, opts, cb) => {
 			setInterval(() => {
 				exec('./test-internet',(err) => {
 					if (err) {
-						cli.error(err);
+						cli.error(`TEST INTERNET - ${err}`);
 					}
 					else {
 						cli.debug('test-internet done');
@@ -93,7 +93,7 @@ exports.load = (args, opts, cb) => {
 								_.each(events, event);
 							}
 							else {
-								cli.error(e);
+								cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
 							}
 						});
 					}
@@ -107,7 +107,7 @@ exports.load = (args, opts, cb) => {
 								savePidToKill(pid);
 							}
 							else {
-								cli.error(e);
+								cli.error(`STARTUP - ${e}`);
 							}
 						});
 					}
@@ -240,7 +240,7 @@ exports.load = (args, opts, cb) => {
 			ps.kill(pid, (e) => {
 				if (e != null) {
 					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
-						cli.error(`PS - ${e}`);
+						cli.error(`PS (KILLING PIDS) - ${e}`);
 					}
 					else {
 						cli.debug(`${pid} not found`);
