@@ -162,8 +162,8 @@ exports.load = (args, opts, cb) => {
 			}
 			if(parsedData.processed) {
 				delete parsedData.eventRawData;
-				// cli.debug('sending event');
-				// cli.debug(JSON.stringify(parsedData,null,'\t'));
+				cli.debug('sending event');
+				cli.debug(JSON.stringify(parsedData,null,'\t'));
 				event(parsedData);
 			}
 		}
@@ -276,11 +276,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
-				try {
-					consume(line);
-				} catch (e) {
-					console.error("ASDFASDFASDF", e);
-				}
+				consume(line);
 			}
 		});
 		sysdig.stderr.setEncoding('utf8');
