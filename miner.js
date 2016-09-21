@@ -242,6 +242,9 @@ exports.load = (args, opts, cb) => {
 					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
 						cli.error(e);
 					}
+					else {
+						cli.debug(`killed pid: ${pid}`);
+					}
 				}
 				else {
 					cli.debug(`killed pid: ${pid}`);
@@ -286,7 +289,7 @@ exports.load = (args, opts, cb) => {
 			}
 		});
 		sysdig.on('exit', (code) => {
-			cli.info(`SYSDIG EXIT ${code}`);
+			cli.error(`SYSDIG EXIT ${code}`);
 		});
 		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
