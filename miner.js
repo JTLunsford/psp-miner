@@ -285,7 +285,7 @@ exports.load = (args, opts, cb) => {
 				cli.error(`SYSDIG - ${err}`);
 			}
 			else {
-				cli.info(err);
+				cli.fatal(`SYSDIG - ${err}`);
 			}
 		});
 		sysdig.on('exit', (code) => {
