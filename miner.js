@@ -238,8 +238,10 @@ exports.load = (args, opts, cb) => {
 		cli.debug(`killing ${pids.length} pid(s)`);
 		_async.each(pids, (pid, cb) => {
 			ps.kill(pid, (e) => {
-				if (e != null && e.message.indexOf('No such process') == -1) {
-					cb(e);
+				if (e != null) {
+					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
+						cb(e);
+					}
 				}
 				else {
 					cli.debug(`killed pid: ${pid}`);
