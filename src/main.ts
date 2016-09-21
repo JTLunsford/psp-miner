@@ -2,6 +2,8 @@ import 'core-js';
 import 'reflect-metadata';
 import 'zone.js/dist/zone';
 import './app/app.component.css';
+import 'font-awesome-webpack';
+import 'font-awesome/css/font-awesome.css';
 
 import { NgModule }                         from '@angular/core';
 import { BrowserModule }                    from '@angular/platform-browser';

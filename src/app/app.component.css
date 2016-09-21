@@ -1,15 +1,63 @@
 html,body {
   height:100%;
   margin:0;
+  font-family: 'Roboto', sans-serif;
 }
 
 psp-miner {
+  position:absolute;
+  top:0;
+  bottom:0;
+  right:0;
+  left:0;
   display: block;
-  height:100%;
-  min-height:100%;
-  background: url(https://upload.wikimedia.org/wikipedia/en/thumb/1/15/Logo_D3.svg/256px-Logo_D3.svg.png) center center no-repeat scroll #500A20;
 }
 
-html>body psp-miner {
-  height:auto;
+psp-miner nav {
+  display:block;
+  top:0;
+  right:0;
+  left:0;
+  height: 100px;
+  background:#444444;
+  position:absolute;
+}
+
+psp-miner canvas {
+  position:absolute;
+  bottom:0;
+  right:0;
+  left:0;
+  display: block;
+}
+
+.title {
+  margin-left:30px;
+  margin-top:35px;
+  color:white;
+}
+
+psp-miner section {
+  position:absolute;
+  top:120px;
+  left:35px;
+  display: block;
+}
+
+.label {
+  font-size:25px;
+}
+
+.sublabel {
+  font-size:18px;
+}
+
+psp-miner footer {
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:65px;
+  display: block;
+  background:#444444;
 }
