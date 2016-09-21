@@ -288,6 +288,9 @@ exports.load = (args, opts, cb) => {
 				cli.info(err);
 			}
 		});
+		sysdig.on('exit', (code, sig) => {
+			console.log("SYSDIG EXIT:    ", code, sig);
+		});
 		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
 	
