@@ -292,6 +292,9 @@ exports.load = (args, opts, cb) => {
 		sysdig.on('exit', (code) => {
 			cli.error(`SYSDIG EXIT ${code}`);
 		});
+		setInterval(() => {
+			console.log('sysdig pid: ' + sysdig.pid);
+		}, 30000);
 		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
 	
