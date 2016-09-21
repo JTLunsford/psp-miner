@@ -278,7 +278,12 @@ exports.load = (args, opts, cb) => {
 		});
 		sysdig.stderr.setEncoding('utf8');
 		sysdig.stderr.on('data', (err) => {
-			cli.fatal(err);
+			if (err.indexOf('warning') == -1) {
+				cli.fatal(err);
+			}
+			else {
+				cli.info(err);
+			}
 		});
 		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
