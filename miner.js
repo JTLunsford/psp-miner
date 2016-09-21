@@ -273,6 +273,9 @@ exports.load = (args, opts, cb) => {
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
+				
+				console.log(line);
+				
 				consume(line);
 			}
 		});
