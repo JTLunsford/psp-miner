@@ -240,7 +240,7 @@ exports.load = (args, opts, cb) => {
 			ps.kill(pid, (e) => {
 				if (e != null) {
 					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
-						cli.error(e);
+						cli.error(`PS - ${e}`);
 					}
 					else {
 						cli.debug(`${pid} not found`);
