@@ -34,6 +34,10 @@ exports.load = (args, opts, cb) => {
 	let firstRun = true;
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
+	let test = exec('sysdig');
+	test.on('exit',()=>{
+		console.error('SYSDIG QUIT');
+	});
 	if(opts.start){
 		if (opts["run-for"] !== null) {
 			setTimeout(() => {
@@ -276,7 +280,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
-				consume(line);
+				//consume(line);
 			}
 		});
 		sysdig.stderr.setEncoding('utf8');
@@ -291,7 +295,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.on('exit', (code) => {
 			cli.error(`SYSDIG EXIT ${code}`);
 		});
-		process.nextTick(() => { cb(null, sysdig.pid); });
+		//process.nextTick(() => { cb(null, sysdig.pid); });
 	}
 	
 	function buildSysdigArgs() {
