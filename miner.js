@@ -159,8 +159,8 @@ exports.load = (args, opts, cb) => {
 			}
 			if(parsedData.processed) {
 				delete parsedData.eventRawData;
-				// cli.debug('sending event');
-				// cli.debug(JSON.stringify(parsedData,null,'\t'));
+				cli.debug('sending event');
+				cli.debug(JSON.stringify(parsedData,null,'\t'));
 				event(parsedData);
 			}
 		}
@@ -242,9 +242,6 @@ exports.load = (args, opts, cb) => {
 				if (e != null) {
 					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
 						cli.error(`PS (KILLING PIDS) - ${e}`);
-					}
-					else {
-						cli.debug(`${pid} not found`);
 					}
 				}
 				else {
