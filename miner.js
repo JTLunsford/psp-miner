@@ -97,6 +97,9 @@ exports.load = (args, opts, cb) => {
 								cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
 							}
 						});
+						if (!opts["no-sysdig"]) {
+							keepSysdigRunning();
+						}
 					}
 					killSysdigs((e) => {
 						if (e != null) {
@@ -109,9 +112,6 @@ exports.load = (args, opts, cb) => {
 					break;
 			}
 		});
-		if (!opts["no-sysdig"]) {
-			keepSysdigRunning();
-		}
 	}
 	else{
 		cli.error('start is missing');
