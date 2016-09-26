@@ -159,9 +159,11 @@ function initializeProcessor(dbWriteFreqInSeconds) {
 	});
 }
 
-function handle(evt) {
+function handle(evt, opts) {
 	process.nextTick(() => {
-		cli.debug(`processor received event: ${JSON.stringify(evt,null,'\t')}`); 
+		if (opts['event-logging']) {
+			cli.debug(`processor received event: ${JSON.stringify(evt,null,'\t')}`);
+		}
 		if(dbLoaded) {
 			if(evt.relation) {
 				upsertProcess(evt.procname,evt.relation.ptProcName);		
