@@ -274,6 +274,7 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function keepSysdigRunning() {
+		 cli.debug('persisting sysdig');
 		function started(pid) {
 			savePidToKill(pid);
 		}
