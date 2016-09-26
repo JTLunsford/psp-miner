@@ -87,6 +87,11 @@ exports.load = (args, opts, cb) => {
 				case 'config-update':
 					config = serverEvent.data;
 					cli.debug(`miner config updated - ${JSON.stringify(config)}`);
+					killSysdigs((e) => {
+						if (e != null) {
+							cli.error(`KILLING SYSDIGS - ${e}`);
+						}
+					});
 					if (firstRun) {
 						firstRun = false;
 						if (opts['proc-in-prog']) {
@@ -103,11 +108,6 @@ exports.load = (args, opts, cb) => {
 							keepSysdigRunning();
 						}
 					}
-					killSysdigs((e) => {
-						if (e != null) {
-							cli.error(`KILLING SYSDIGS - ${e}`);
-						}
-					});
 					break;
 				default:
 					cli.info(`unknown server event ${serverEvent.event} received`);
