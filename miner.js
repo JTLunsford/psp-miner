@@ -98,26 +98,20 @@ exports.load = (args, opts, cb) => {
 							}
 						});
 					}
-					if (!opts["no-sysdig"]) {
-						_async.waterfall([
-							loadPidsToKill,
-							killPids,
-							startSysdig
-						], (e, pid) => {
-							if (e === null) {
-								savePidToKill(pid);
-							}
-							else {
-								cli.error(`STARTUP - ${e}`);
-							}
-						});
-					}
+					killSysdigs((e) => {
+						if (e != null) {
+							cli.error(`KILLING SYSDIGS - ${e}`);
+						}
+					});
 					break;
 				default:
 					cli.info(`unknown server event ${serverEvent.event} received`);
 					break;
 			}
 		});
+		if (!opts["no-sysdig"]) {
+			keepSysdigRunning();
+		}
 	}
 	else{
 		cli.error('start is missing');
@@ -272,8 +266,23 @@ exports.load = (args, opts, cb) => {
 		});
 	}
 	
+	function killSysdigs(cb) {
+		_async.waterfall([
+			loadPidsToKill,
+			killPids
+		], cb);
+	}
+	
 	function keepSysdigRunning() {
-		
+		function started(pid) {
+			savePidToKill(pid);
+		}
+		function closed(code) {
+			killPids((e) => {
+				startSysdig(started, closed);
+			});
+		}
+		startSysdig(started, closed);
 	}
 	
 	function startSysdig(started, closed) {
@@ -297,7 +306,7 @@ exports.load = (args, opts, cb) => {
 			}
 		});
 		sysdig.on('exit', (code) => {
-			cli.fatal(`SYSDIG EXIT ${code}`);
+			closed(code);
 		});
 		process.nextTick(() => { started(null, sysdig.pid); });
 	}
