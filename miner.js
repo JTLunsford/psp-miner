@@ -284,7 +284,7 @@ exports.load = (args, opts, cb) => {
 		}
 		function closed(code) {
 			cli.debug('sysdig closed');
-			killPids((e) => {
+			killSysdigs((e) => {
 				cli.debug('restarting sysdig');
 				startSysdig(started, closed);
 			});
