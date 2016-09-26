@@ -23,7 +23,7 @@ exports.load = (args, opts, cb) => {
     const archiveFolderPath = path.resolve('./archive');
     setConfig(require('./config.json'));
     const event = require('./event-handler')(opts['db-write-freq']);
-    const wsServer = new ws.Server({
+    new ws.Server({
         server: http.createServer((req, res) => {
             let route = req.url.split('/').slice(1);
             if (route.length == 1 && route[0].length == 0) {
@@ -70,7 +70,7 @@ exports.load = (args, opts, cb) => {
                                                 case 'POST':
                                                     parseJsonBody(req, res, (fields) => {
                                                         if (fields.name !== void 0) {
-                                                            cli.debug(`creating archive: ${fields.name}`)
+                                                            cli.debug(`creating archive: ${fields.name}`);
                                                             event.processor.archiveDb(fields.name, (e) => {
                                                                 if (e != null) {
                                                                     cli.error(e);
@@ -127,7 +127,7 @@ exports.load = (args, opts, cb) => {
                                                     break;
                                                 case 'DELETE':
                                                     if (fs.existsSync(archivePath)) {
-                                                        cli.debug(`deleting archive: ${route[3]}`)
+                                                        cli.debug(`deleting archive: ${route[3]}`);
                                                         fs.unlink(archivePath, (e) => {
                                                             if (e == null) {
                                                                 res.end();
@@ -246,12 +246,6 @@ exports.load = (args, opts, cb) => {
             const boundryId = boundryIdMatch[1];
             cli.debug(`parsing form body: ${boundryId}`);
             parseBody(req, (body) => {
-                
-                // console.log(req.headers);
-                // parseBody(req, (body) => {
-                //     console.log(body);
-                // });
-                
                 const kvps = {};
                 const re = new RegExp(`${boundryId}\\s*Content-Disposition: form-data; name="(.+)"\\s*(\\S+)`, 'g');
                 let m = re.exec(body);

@@ -27,6 +27,7 @@ module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
         cli.debug(`sending events to ${url}`);
         connectSocket(url, configUpdated);
     }
+    let notOpenedReported = false;
     function handle(evt) {
 		if (local) {
 		    if (evt instanceof Array) {
@@ -43,10 +44,12 @@ module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
 		        cli.error('socket is not defined');
 		        return;
 		    }
-		    if (socket.readyState != 1) {
+		    if (socket.readyState != 1 && !notOpenedReported) {
+		    	notOpenedReported = true
 		        cli.error(`socket not open - readyState: ${socket.readyState}`);
 		        return;
 		    }
+		    notOpenedReported = false;
 		    socket.send(JSON.stringify(evt));
 		}
 	}
