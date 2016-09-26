@@ -271,9 +271,9 @@ exports.load = (args, opts, cb) => {
 	
 	function startSysdig(cb) {
 		cli.debug('starting sysdig');
-		const sysdigCmd = `sysdig ${buildSysdigArgs()}`;
-		cli.debug(`spawning: ${sysdigCmd}`);
-		let sysdig = spawn(sysdigCmd);
+		const args = buildSysdigArgs();
+		cli.debug(`spawning: sysdig ${args.join(' ')}`);
+		let sysdig = spawn('sysdig', args);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
@@ -330,7 +330,7 @@ exports.load = (args, opts, cb) => {
 			args[args.length - 1] = `${args[args.length - 1]}"`;
 		}
 		args = args.join(' ');
-		return args;
+		return [ args ];
 	}
 	
 	function savePidToKill(pid) {
