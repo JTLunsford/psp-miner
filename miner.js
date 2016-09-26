@@ -286,7 +286,7 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function startSysdig(started, closed) {
-		cli.debug('starting sysdig');
+		cli.info('starting sysdig');
 		const args = buildSysdigArgs();
 		cli.debug(`spawning: sysdig ${args.join(' ')}`);
 		let sysdig = spawn('sysdig', args);
