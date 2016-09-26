@@ -224,15 +224,18 @@ exports.load = (args, opts, cb) => {
 	function loadPidsToKill(cb) {
 		if (!fs.existsSync(pidsToKillPath)) {
 			fs.writeFileSync(pidsToKillPath, '[]', 'utf8');
+			cb(null, []);
 		}
-		fs.readFile(pidsToKillPath, 'utf8', (e, pidsToKillJson) => {
-			if (e == null) {
-				cb(null, JSON.parse(pidsToKillJson));
-			}
-			else {
-				cb(`ERROR LOADING pids-to-kill.json:\n${e.stack}`);
-			}
-		});
+		else {
+			fs.readFile(pidsToKillPath, 'utf8', (e, pidsToKillJson) => {
+				if (e == null) {
+					cb(null, JSON.parse(pidsToKillJson));
+				}
+				else {
+					cb(`ERROR LOADING pids-to-kill.json:\n${e.stack}`);
+				}
+			});
+		}
 	}
 	
 	function killPids(pids, cb) {
@@ -269,7 +272,11 @@ exports.load = (args, opts, cb) => {
 		});
 	}
 	
-	function startSysdig(cb) {
+	function keepSysdigRunning() {
+		
+	}
+	
+	function startSysdig(started, closed) {
 		cli.debug('starting sysdig');
 		const args = buildSysdigArgs();
 		cli.debug(`spawning: sysdig ${args.join(' ')}`);
@@ -292,7 +299,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.on('exit', (code) => {
 			cli.fatal(`SYSDIG EXIT ${code}`);
 		});
-		process.nextTick(() => { cb(null, sysdig.pid); });
+		process.nextTick(() => { started(null, sysdig.pid); });
 	}
 	
 	function buildSysdigArgs() {

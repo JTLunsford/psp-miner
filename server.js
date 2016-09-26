@@ -21,7 +21,7 @@ let clients = [];
 exports.load = (args, opts, cb) => {
     setInterval(() => {
         outputClientsConnected();
-    }, 10000);
+    }, 30000);
     let config, configJson;
     const archiveFolderPath = path.resolve('./archive');
     setConfig(require('./config.json'));
@@ -350,11 +350,11 @@ exports.load = (args, opts, cb) => {
         clients = _.filter(clients, (c) => {
             return c.__id != id;
         });
-        outputClientsConnected();
+        outputClientsConnected(true);
     }
     
-    function outputClientsConnected() {
-        if (clients.length > 0) {
+    function outputClientsConnected(reportZero) {
+        if (clients.length > 0 || reportZero) {
             cli.info(`${clients.length} client(s) connected`);
         }
     }
