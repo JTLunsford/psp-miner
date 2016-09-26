@@ -44,9 +44,11 @@ module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
 		        cli.error('socket is not defined');
 		        return;
 		    }
-		    if (socket.readyState != 1 && !notOpenedReported) {
-		    	notOpenedReported = true
-		        cli.error(`socket not open - readyState: ${socket.readyState}`);
+		    if (socket.readyState != 1) {
+		        if (!notOpenedReported) {
+		        	cli.error(`socket not open - readyState: ${socket.readyState}`);
+		        }
+		    	notOpenedReported = true;
 		        return;
 		    }
 		    notOpenedReported = false;
