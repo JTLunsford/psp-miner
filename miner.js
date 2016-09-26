@@ -159,8 +159,8 @@ exports.load = (args, opts, cb) => {
 			}
 			if(parsedData.processed) {
 				delete parsedData.eventRawData;
-				cli.debug('sending event');
-				cli.debug(JSON.stringify(parsedData,null,'\t'));
+				// cli.debug('sending event');
+				// cli.debug(JSON.stringify(parsedData,null,'\t'));
 				event(parsedData);
 			}
 		}
@@ -218,6 +218,7 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function loadPidsToKill(cb) {
+		cli.debug('loading pids to kill');
 		if (!fs.existsSync(pidsToKillPath)) {
 			fs.writeFileSync(pidsToKillPath, '[]', 'utf8');
 			cb(null, []);
@@ -253,14 +254,7 @@ exports.load = (args, opts, cb) => {
 			});
 		}, (e) => {
 			if (e == null) {
-				fs.writeFile(pidsToKillPath, '[]', 'utf8', (e) => {
-					if (e == null) {
-						cb(null);
-					}
-					else {
-						cb(`ERROR CLEARING pids-to-kill.json:\n${e.stack}`);
-					}
-				});
+				cb(null);
 			}
 			else {
 				cb(`ERROR KILLING PROCESSES:\n${e.stack}`);
@@ -277,7 +271,7 @@ exports.load = (args, opts, cb) => {
 	
 	function keepSysdigRunning() {
 		 cli.debug('persisting sysdig');
-		function started(pid) {
+		function started(e, pid) {
 			savePidToKill(pid);
 		}
 		function closed(code) {
