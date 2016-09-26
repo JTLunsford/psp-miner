@@ -1,6 +1,7 @@
 "use strict"
 
 const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
 const fs = require('fs');
 const path = require('path');
 
@@ -34,10 +35,6 @@ exports.load = (args, opts, cb) => {
 	let firstRun = true;
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
-	let test = exec('sysdig');
-	test.on('exit',()=>{
-		console.error('SYSDIG QUIT');
-	});
 	if(opts.start){
 		if (opts["run-for"] !== null) {
 			setTimeout(() => {
@@ -227,15 +224,18 @@ exports.load = (args, opts, cb) => {
 	function loadPidsToKill(cb) {
 		if (!fs.existsSync(pidsToKillPath)) {
 			fs.writeFileSync(pidsToKillPath, '[]', 'utf8');
+			cb(null, []);
 		}
-		fs.readFile(pidsToKillPath, 'utf8', (e, pidsToKillJson) => {
-			if (e == null) {
-				cb(null, JSON.parse(pidsToKillJson));
-			}
-			else {
-				cb(`ERROR LOADING pids-to-kill.json:\n${e.stack}`);
-			}
-		});
+		else {
+			fs.readFile(pidsToKillPath, 'utf8', (e, pidsToKillJson) => {
+				if (e == null) {
+					cb(null, JSON.parse(pidsToKillJson));
+				}
+				else {
+					cb(`ERROR LOADING pids-to-kill.json:\n${e.stack}`);
+				}
+			});
+		}
 	}
 	
 	function killPids(pids, cb) {
@@ -272,15 +272,19 @@ exports.load = (args, opts, cb) => {
 		});
 	}
 	
-	function startSysdig(cb) {
+	function keepSysdigRunning() {
+		
+	}
+	
+	function startSysdig(started, closed) {
 		cli.debug('starting sysdig');
-		const sysdigCmd = `sysdig ${buildSysdigArgs()}`;
-		cli.debug(`executing: ${sysdigCmd}`);
-		let sysdig = exec(sysdigCmd);
+		const args = buildSysdigArgs();
+		cli.debug(`spawning: sysdig ${args.join(' ')}`);
+		let sysdig = spawn('sysdig', args);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
-				//consume(line);
+				consume(line);
 			}
 		});
 		sysdig.stderr.setEncoding('utf8');
@@ -293,9 +297,9 @@ exports.load = (args, opts, cb) => {
 			}
 		});
 		sysdig.on('exit', (code) => {
-			cli.error(`SYSDIG EXIT ${code}`);
+			cli.fatal(`SYSDIG EXIT ${code}`);
 		});
-		//process.nextTick(() => { cb(null, sysdig.pid); });
+		process.nextTick(() => { started(null, sysdig.pid); });
 	}
 	
 	function buildSysdigArgs() {
@@ -333,7 +337,7 @@ exports.load = (args, opts, cb) => {
 			args[args.length - 1] = `${args[args.length - 1]}"`;
 		}
 		args = args.join(' ');
-		return args;
+		return [ args ];
 	}
 	
 	function savePidToKill(pid) {
