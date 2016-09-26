@@ -19,6 +19,9 @@ exports.opts = {
 let clients = [];
 
 exports.load = (args, opts, cb) => {
+    setInterval(() => {
+        outputClientsConnected();
+    }, 10000);
     let config, configJson;
     const archiveFolderPath = path.resolve('./archive');
     setConfig(require('./config.json'));
@@ -189,6 +192,7 @@ exports.load = (args, opts, cb) => {
     }).on('connection', (socket) => {
         socket.__id = uuid.v4();
         clients.push(socket);
+        outputClientsConnected();
         socket.on('message', (msg) => {
             utility.parseJson(msg, (e, obj) => {
                 if (e === null) {
@@ -346,5 +350,12 @@ exports.load = (args, opts, cb) => {
         clients = _.filter(clients, (c) => {
             return c.__id != id;
         });
+        outputClientsConnected();
+    }
+    
+    function outputClientsConnected() {
+        if (clients.length > 0) {
+            cli.info(`${clients.length} client(s) connected`);
+        }
     }
 };

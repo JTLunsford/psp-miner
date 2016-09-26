@@ -290,7 +290,7 @@ exports.load = (args, opts, cb) => {
 			}
 		});
 		sysdig.on('exit', (code) => {
-			cli.error(`SYSDIG EXIT ${code}`);
+			cli.fatal(`SYSDIG EXIT ${code}`);
 		});
 		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
