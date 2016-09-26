@@ -1,6 +1,7 @@
 "use strict"
 
 const exec = require('child_process').exec;
+const spawn = require('child_process').spawn;
 const fs = require('fs');
 const path = require('path');
 
@@ -34,10 +35,6 @@ exports.load = (args, opts, cb) => {
 	let firstRun = true;
 	cli.debug(`arguments: ${args}`);
 	cli.debug(`options: ${JSON.stringify(opts)}`);
-	let test = exec('sysdig');
-	test.on('exit',()=>{
-		console.error('SYSDIG QUIT');
-	});
 	if(opts.start){
 		if (opts["run-for"] !== null) {
 			setTimeout(() => {
@@ -275,12 +272,12 @@ exports.load = (args, opts, cb) => {
 	function startSysdig(cb) {
 		cli.debug('starting sysdig');
 		const sysdigCmd = `sysdig ${buildSysdigArgs()}`;
-		cli.debug(`executing: ${sysdigCmd}`);
-		let sysdig = exec(sysdigCmd);
+		cli.debug(`spawning: ${sysdigCmd}`);
+		let sysdig = spawn(sysdigCmd);
 		sysdig.stdout.setEncoding('utf8');
 		sysdig.stdout.on('data', (data) => {
 			for(let line of data.split('\n')){
-				//consume(line);
+				consume(line);
 			}
 		});
 		sysdig.stderr.setEncoding('utf8');
@@ -295,7 +292,7 @@ exports.load = (args, opts, cb) => {
 		sysdig.on('exit', (code) => {
 			cli.error(`SYSDIG EXIT ${code}`);
 		});
-		//process.nextTick(() => { cb(null, sysdig.pid); });
+		process.nextTick(() => { cb(null, sysdig.pid); });
 	}
 	
 	function buildSysdigArgs() {
