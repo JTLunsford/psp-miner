@@ -91,23 +91,23 @@ exports.load = (args, opts, cb) => {
 						if (e != null) {
 							cli.error(`KILLING SYSDIGS - ${e}`);
 						}
+						if (firstRun) {
+							firstRun = false;
+							if (opts['proc-in-prog']) {
+								reportAlreadyRunningProcs((e, events) => {
+									if (e == null) {
+										_.each(events, event);
+									}
+									else {
+										cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
+									}
+								});
+							}
+							if (!opts["no-sysdig"]) {
+								keepSysdigRunning();
+							}
+						}
 					});
-					if (firstRun) {
-						firstRun = false;
-						if (opts['proc-in-prog']) {
-							reportAlreadyRunningProcs((e, events) => {
-								if (e == null) {
-									_.each(events, event);
-								}
-								else {
-									cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
-								}
-							});
-						}
-						if (!opts["no-sysdig"]) {
-							keepSysdigRunning();
-						}
-					}
 					break;
 				default:
 					cli.info(`unknown server event ${serverEvent.event} received`);
@@ -254,11 +254,19 @@ exports.load = (args, opts, cb) => {
 			});
 		}, (e) => {
 			if (e == null) {
-				cb(null);
+				fs.writeFile(pidsToKillPath, '[]', 'utf8', (e) => {
+					if (e == null) {
+						cb(null);
+					}
+					else {
+						cb(`ERROR CLEARING pids-to-kill.json:\n${e.stack}`);
+					}
+				});
 			}
 			else {
 				cb(`ERROR KILLING PROCESSES:\n${e.stack}`);
 			}
+
 		});
 	}
 	
