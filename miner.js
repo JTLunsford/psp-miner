@@ -87,16 +87,18 @@ exports.load = (args, opts, cb) => {
 				case 'config-update':
 					config = serverEvent.data;
 					cli.debug(`miner config updated - ${JSON.stringify(config)}`);
-					if (firstRun && opts['proc-in-prog']) {
+					if (firstRun) {
 						firstRun = false;
-						reportAlreadyRunningProcs((e, events) => {
-							if (e == null) {
-								_.each(events, event);
-							}
-							else {
-								cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
-							}
-						});
+						if (opts['proc-in-prog']) {
+							reportAlreadyRunningProcs((e, events) => {
+								if (e == null) {
+									_.each(events, event);
+								}
+								else {
+									cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
+								}
+							});
+						}
 						if (!opts["no-sysdig"]) {
 							keepSysdigRunning();
 						}
