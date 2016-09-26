@@ -40,11 +40,11 @@ module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
 		}
 		else {
 		    if (socket === void 0) {
-		        cli.debug('socket is not defined');
+		        cli.error('socket is not defined');
 		        return;
 		    }
 		    if (socket.readyState != 1) {
-		        cli.debug(`socket not open - readyState: ${socket.readyState}`);
+		        cli.error(`socket not open - readyState: ${socket.readyState}`);
 		        return;
 		    }
 		    socket.send(JSON.stringify(evt));
@@ -62,11 +62,11 @@ function connectSocket(url, serverEventListener) {
         socket.on('open', () => {
         	clearTimeout(opening);
             clearInterval(reconnecting);
-            cli.debug('socket connected');
+            cli.info('socket connected');
         }).on('close', () => {
         	clearTimeout(opening);
             reconnecting = setTimeout(() => {
-                cli.debug('socket closed - attempting reconnect...');
+                cli.error('socket closed - attempting reconnect...');
                 connectSocket(url, serverEventListener);
             }, 5000);
         }).on('message', (msg) => {
@@ -85,7 +85,7 @@ function connectSocket(url, serverEventListener) {
         });
         opening = setTimeout(() => {
         	if (socket.readyState == 0) {
-                cli.debug('socket never connected - attempting reconnect...');
+                cli.error('socket never connected - attempting reconnect...');
                 connectSocket(url, serverEventListener);
         	}
         }, 5000);
