@@ -70,8 +70,8 @@ function connectSocket(url, serverEventListener) {
             cli.info('socket connected');
         }).on('close', () => {
         	clearTimeout(opening);
+            cli.error('socket closed - attempting reconnect...');
             reconnecting = setTimeout(() => {
-                cli.error('socket closed - attempting reconnect...');
                 connectSocket(url, serverEventListener);
             }, 5000);
         }).on('message', (msg) => {

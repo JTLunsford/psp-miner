@@ -87,31 +87,27 @@ exports.load = (args, opts, cb) => {
 				case 'config-update':
 					config = serverEvent.data;
 					cli.debug(`miner config updated - ${JSON.stringify(config)}`);
-					if (firstRun && opts['proc-in-prog']) {
-						firstRun = false;
-						reportAlreadyRunningProcs((e, events) => {
-							if (e == null) {
-								_.each(events, event);
+					killSysdigs((e) => {
+						if (e != null) {
+							cli.error(`KILLING SYSDIGS - ${e}`);
+						}
+						if (firstRun) {
+							firstRun = false;
+							if (opts['proc-in-prog']) {
+								reportAlreadyRunningProcs((e, events) => {
+									if (e == null) {
+										_.each(events, event);
+									}
+									else {
+										cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
+									}
+								});
 							}
-							else {
-								cli.error(`PS (IN PROGRESS PROCS) - ${e}`);
+							if (!opts["no-sysdig"]) {
+								keepSysdigRunning();
 							}
-						});
-					}
-					if (!opts["no-sysdig"]) {
-						_async.waterfall([
-							loadPidsToKill,
-							killPids,
-							startSysdig
-						], (e, pid) => {
-							if (e === null) {
-								savePidToKill(pid);
-							}
-							else {
-								cli.error(`STARTUP - ${e}`);
-							}
-						});
-					}
+						}
+					});
 					break;
 				default:
 					cli.info(`unknown server event ${serverEvent.event} received`);
@@ -222,6 +218,7 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function loadPidsToKill(cb) {
+		cli.debug('loading pids to kill');
 		if (!fs.existsSync(pidsToKillPath)) {
 			fs.writeFileSync(pidsToKillPath, '[]', 'utf8');
 			cb(null, []);
@@ -246,9 +243,6 @@ exports.load = (args, opts, cb) => {
 					if (e.message != void 0 && e.message.indexOf('No such process') == -1) {
 						cli.error(`PS (KILLING PIDS) - ${e}`);
 					}
-					else {
-						cli.debug(`${pid} not found`);
-					}
 				}
 				else {
 					cli.debug(`killed pid: ${pid}`);
@@ -269,15 +263,34 @@ exports.load = (args, opts, cb) => {
 			else {
 				cb(`ERROR KILLING PROCESSES:\n${e.stack}`);
 			}
+
 		});
 	}
 	
+	function killSysdigs(cb) {
+		_async.waterfall([
+			loadPidsToKill,
+			killPids
+		], cb);
+	}
+	
 	function keepSysdigRunning() {
-		
+		 cli.debug('persisting sysdig');
+		function started(e, pid) {
+			savePidToKill(pid);
+		}
+		function closed(code) {
+			cli.debug('sysdig closed');
+			killSysdigs((e) => {
+				cli.debug('restarting sysdig');
+				startSysdig(started, closed);
+			});
+		}
+		startSysdig(started, closed);
 	}
 	
 	function startSysdig(started, closed) {
-		cli.debug('starting sysdig');
+		cli.info('starting sysdig');
 		const args = buildSysdigArgs();
 		cli.debug(`spawning: sysdig ${args.join(' ')}`);
 		let sysdig = spawn('sysdig', args);
@@ -297,7 +310,7 @@ exports.load = (args, opts, cb) => {
 			}
 		});
 		sysdig.on('exit', (code) => {
-			cli.fatal(`SYSDIG EXIT ${code}`);
+			closed(code);
 		});
 		process.nextTick(() => { started(null, sysdig.pid); });
 	}
