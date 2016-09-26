@@ -86,7 +86,7 @@ exports.load = (args, opts, cb) => {
 		event = eventHandler(opts, opts.url, (serverEvent) => {
 			switch (serverEvent.event) {
 				case 'config-update':
-					config = serverEvent.data;
+					updateConfig(serverEvent.data);
 					cli.debug(`miner config updated - ${JSON.stringify(config)}`);
 					killSysdigs((e) => {
 						if (e != null) {
@@ -354,6 +354,11 @@ exports.load = (args, opts, cb) => {
 		}
 		args = args.join(' ');
 		return [ args ];
+	}
+	
+	function updateConfig(newConfig) {
+		config = newConfig;
+		fs.writeFileSync('./config.json', JSON.stringify(config, null, '\t'));
 	}
 	
 	function savePidToKill(pid) {
