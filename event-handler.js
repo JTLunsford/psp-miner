@@ -8,13 +8,13 @@ const utility = require('./utility');
 const config = require('./config.json');
 
 let socket, processor;
-module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
+module.exports = (opts, url, configUpdated) => {
     const local = url === void 0 || url === null;
     if (local) {
 		processor = require('./processor');
-		cli.debug(`writing db every ${dbWriteFreqInSeconds} seconds`);
+		cli.debug(`writing db every ${opts['db-write-freq']} seconds`);
 		processor.updateConfig(config);
-		processor.initializeProcessor(dbWriteFreqInSeconds);
+		processor.initializeProcessor(opts['db-write-freq']);
 	    if (typeof configUpdated == 'function') {
 		    configUpdated({
 		        event: 'config-update',
@@ -32,11 +32,11 @@ module.exports = (dbWriteFreqInSeconds, url, configUpdated) => {
 		if (local) {
 		    if (evt instanceof Array) {
 		        for (const e of evt) {
-		            processor(e);
+		            processor(e, opts);
 		        }
 		    }
 		    else {
-		        processor(evt);
+		        processor(evt, opts);
 		    }
 		}
 		else {
@@ -67,7 +67,7 @@ function connectSocket(url, serverEventListener) {
         socket.on('open', () => {
         	clearTimeout(opening);
             clearInterval(reconnecting);
-            cli.info('socket connected');
+            cli.debug('socket connected');
         }).on('close', () => {
         	clearTimeout(opening);
             cli.error('socket closed - attempting reconnect...');

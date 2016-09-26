@@ -13,7 +13,8 @@ const uuid = require('uuid');
 const utility = require('./utility');
 
 exports.opts = {
-    "db-write-freq":    [false, 'frequency, in seconds, to write db.json', 'int', 30]
+    "db-write-freq":    [false, 'frequency, in seconds, to write db.json', 'int', 30],
+	"event-logging":	['l', 'output events data json to stdout']
 };
 
 let clients = [];
@@ -25,7 +26,7 @@ exports.load = (args, opts, cb) => {
     let config, configJson;
     const archiveFolderPath = path.resolve('./archive');
     setConfig(require('./config.json'));
-    const event = require('./event-handler')(opts['db-write-freq']);
+    const event = require('./event-handler')(opts);
     new ws.Server({
         server: http.createServer((req, res) => {
             let route = req.url.split('/').slice(1);

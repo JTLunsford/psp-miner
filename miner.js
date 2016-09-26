@@ -25,6 +25,7 @@ exports.opts = {
 	"test-child":		['c', 'add a test child/parent'],
 	"test-events":		['e', 'add a test child/parent'],
 	"test-internet":	['i', 'test internet connection'],
+	"event-logging":	['l', 'output events data json to stdout'],
 	url:				[false, 'remote server url to send events for processing', 'url'],
 	"run-for":			[false, 'run application for a certain number of seconds', 'int'],
     "db-write-freq":    [false, 'frequency, in seconds, to write db.json', 'int', 30]
@@ -82,7 +83,7 @@ exports.load = (args, opts, cb) => {
 			}, 2500);
 		}
 		
-		event = eventHandler(opts['db-write-freq'], opts.url, (serverEvent) => {
+		event = eventHandler(opts, opts.url, (serverEvent) => {
 			switch (serverEvent.event) {
 				case 'config-update':
 					config = serverEvent.data;
@@ -159,8 +160,10 @@ exports.load = (args, opts, cb) => {
 			}
 			if(parsedData.processed) {
 				delete parsedData.eventRawData;
-				cli.debug('sending event');
-				cli.debug(JSON.stringify(parsedData,null,'\t'));
+				if (opts['event-logging']) {
+					cli.debug('sending event');
+					cli.debug(JSON.stringify(parsedData,null,'\t'));
+				}
 				event(parsedData);
 			}
 		}
@@ -290,7 +293,7 @@ exports.load = (args, opts, cb) => {
 	}
 	
 	function startSysdig(started, closed) {
-		cli.info('starting sysdig');
+		cli.debug('starting sysdig');
 		const args = buildSysdigArgs();
 		cli.debug(`spawning: sysdig ${args.join(' ')}`);
 		let sysdig = spawn('sysdig', args);
