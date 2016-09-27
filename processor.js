@@ -43,9 +43,6 @@ function upsertConnection(procname, ip) {
 	if(!_.some(config.ipSkip,(n)=>{return ip == n || _.some(new cidr().list(n), (anIp) => { return anIp == ip; });})) {
 		cli.debug(`connection ${ip} not skipped`);
 		let item = _.find(db,(i) => { return i.name === ip;});
-		
-		console.log(procname, item);
-		
 		if(!item) {
 			db.push({
 				name: ip,
