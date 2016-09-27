@@ -54,7 +54,7 @@ function upsertConnection(procname, ip) {
 		else {
 			item.events++;
 			item.parents.push(procname);
-			item.parents = _.uniq(item.procs);
+			item.parents = _.uniq(item.parents);
 		}
 		let proc = _.find(db,(i) => { return i.name === procname;});
 		proc.children.push(ip);
